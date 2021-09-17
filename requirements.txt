@@ -1,0 +1,4 @@
+ddsp==1.6.5
+tensorflow==2.6.0
+livelossplot
+
