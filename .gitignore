@@ -1,6 +1,9 @@
 # artefacts
 artefacts/
-logdir
+logdir  
+Solos
+Edyson
+datasets
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
