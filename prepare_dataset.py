@@ -10,7 +10,7 @@ TST_SPLIT=0.2
 VAL_SPLIT=0.2
 
 WINDOW_S=4
-TRN_OVERLAP_S=1
+TRN_HOP_SIZE=1
 COARSE_CHUNK_S=300
 
 random.seed(SEED)
@@ -56,7 +56,6 @@ def run():
 	def path2filename(path):
 		return path.split("/")[-1].split(".")[0]
 
-	# trn 
 	for p in trn_paths:	
 		prepare_tfrecord(
 		[p],
@@ -65,7 +64,7 @@ def run():
 		sample_rate=FLAGS.sample_rate,
 		frame_rate=FLAGS.frame_rate,
 		window_secs=WINDOW_S,
-		hop_secs=TRN_OVERLAP_S,
+		hop_secs=TRN_HOP_SIZE,
 		eval_split_fraction=0,
 		coarse_chunk_secs=COARSE_CHUNK_S)
 	
@@ -77,7 +76,7 @@ def run():
 		sample_rate=FLAGS.sample_rate,
 		frame_rate=FLAGS.frame_rate,
 		window_secs=WINDOW_S,
-		hop_secs=0,
+		hop_secs=WINDOW_S,
 		eval_split_fraction=0,
 		coarse_chunk_secs=COARSE_CHUNK_S)
 
@@ -89,7 +88,7 @@ def run():
 		sample_rate=FLAGS.sample_rate,
 		frame_rate=FLAGS.frame_rate,
 		window_secs=WINDOW_S,
-		hop_secs=0,
+		hop_secs=WINDOW_S,
 		eval_split_fraction=0,
 		coarse_chunk_secs=COARSE_CHUNK_S)
 
