@@ -163,7 +163,6 @@ tensorflowjs==3.9.0
 termcolor==1.1.0
 terminado==0.10.1
 testpath==0.5.0
-tfds-nightly==4.4.0
 tflite-support==0.2.0
 threadpoolctl==2.2.0
 tornado==6.1
