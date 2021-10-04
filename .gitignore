@@ -4,6 +4,7 @@ logdir
 Solos
 Edyson
 datasets
+tfr/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
