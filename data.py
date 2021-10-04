@@ -22,7 +22,7 @@ class MultiTFRecordProvider():
 		for f in filenames:
 			instrument_dataset_provider = ddsp.training.data.TFRecordProvider(f,self.example_secs,self.sample_rate,self.frame_rate)
 			instrument_dataset = instrument_dataset_provider.get_dataset()
-			instrument_dataset=instrument_dataset.map(lambda x: {**x,"source_filename":f})
+			instrument_dataset=instrument_dataset.map(lambda x: {**x,"instrument":f})
 			if multi_dataset == None:
 				multi_dataset=instrument_dataset
 			multi_dataset=multi_dataset.concatenate(instrument_dataset)
@@ -30,11 +30,11 @@ class MultiTFRecordProvider():
 			multi_dataset=multi_dataset.shuffle(1000)
 		return multi_dataset
 
-test_dp=MultiTFRecordProvider("datasets/solos-violin-clean/tfr/val/*",4,16000,250)
+#test_dp=MultiTFRecordProvider("datasets/solos-violin-clean/tfr/val/*",4,16000,250)
 
-ds=test_dp.get_dataset()
+#ds=test_dp.get_dataset()
 
-print(next(iter(ds))["source_filename"])
+#print(next(iter(ds))["source_filename"])
 
 
 
