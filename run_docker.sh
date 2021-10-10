@@ -1,1 +1,1 @@
-nvidia-docker docker run -it njona_nic_image bash
+nvidia-docker docker run -it njona_nic_image
