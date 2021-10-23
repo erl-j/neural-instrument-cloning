@@ -11,7 +11,7 @@ VAL_SPLIT=0.2
 
 WINDOW_S=4
 TRN_HOP_SIZE=1
-COARSE_CHUNK_S=300
+COARSE_CHUNK_S=20.0
 
 random.seed(SEED)
 
@@ -65,7 +65,7 @@ def run():
 		frame_rate=FLAGS.frame_rate,
 		window_secs=WINDOW_S,
 		hop_secs=TRN_HOP_SIZE,
-		eval_split_fraction=0,
+		eval_split_fraction=0.0,
 		coarse_chunk_secs=COARSE_CHUNK_S)
 	
 	for p in val_paths:	
@@ -77,7 +77,7 @@ def run():
 		frame_rate=FLAGS.frame_rate,
 		window_secs=WINDOW_S,
 		hop_secs=WINDOW_S,
-		eval_split_fraction=0,
+		eval_split_fraction=0.0,
 		coarse_chunk_secs=COARSE_CHUNK_S)
 
 	for p in tst_paths:	
@@ -89,7 +89,7 @@ def run():
 		frame_rate=FLAGS.frame_rate,
 		window_secs=WINDOW_S,
 		hop_secs=WINDOW_S,
-		eval_split_fraction=0,
+		eval_split_fraction=0.0,
 		coarse_chunk_secs=COARSE_CHUNK_S)
 
 
