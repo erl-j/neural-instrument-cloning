@@ -3,18 +3,6 @@ import tensorflow as tf
 _AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
-def add_instrument_idx(dataset):
-    id2idx = {}
-
-    def add_instrument_idx_to_sample(x):
-        instrument_str = str(x["instrument"])
-        if instrument_str not in id2idx:
-            id2idx[instrument_str] = len(id2idx.keys())
-        return {**x, "instrument_idx": id2idx[instrument_str]}
-
-    return dataset.map(add_instrument_idx_to_sample)
-
-
 class MultiTFRecordProvider():
     """Class for reading records and returning a dataset."""
 
@@ -35,20 +23,18 @@ class MultiTFRecordProvider():
         filenames = tf.data.Dataset.list_files(
             self.file_pattern, shuffle=shuffle)
         multi_dataset = None
-        for f in filenames:
+        for fi, f in enumerate(filenames):
             instrument_dataset_provider = ddsp.training.data.TFRecordProvider(
                 f, self.example_secs, self.sample_rate, self.frame_rate)
             instrument_dataset = instrument_dataset_provider.get_dataset()
             instrument_dataset = instrument_dataset.map(
-                lambda x: {**x, "instrument": f})
+                lambda x: {**x, "instrument": f, "instrument_idx": fi})
             if multi_dataset == None:
                 multi_dataset = instrument_dataset
             multi_dataset = multi_dataset.concatenate(instrument_dataset)
 
         if shuffle:
             multi_dataset = multi_dataset.shuffle(1000)
-
-        multi_dataset = add_instrument_idx(multi_dataset)
 
         return multi_dataset
 
@@ -57,6 +43,8 @@ class MultiTFRecordProvider():
 # ds=test_dp.get_dataset()
 
 # print(next(iter(ds))["source_filename"])
+
+# TODO : Add instrument index
 
 
 class CustomNSynthTfds(ddsp.training.data.TfdsProvider):
@@ -76,14 +64,14 @@ class CustomNSynthTfds(ddsp.training.data.TfdsProvider):
                  include_note_labels=True):
         """TfdsProvider constructor.
         Args:
-                name: TFDS dataset name (with optional config and version).
-                split: Dataset split to use of the TFDS dataset.
-                data_dir: The directory to read the prepared NSynth dataset from. Defaults
-                to the public TFDS GCS bucket.
-                sample_rate: Sample rate of audio in the dataset.
-                frame_rate: Frame rate of features in the dataset.
-                include_note_labels: Return dataset without note-level labels
-                (pitch, instrument).
+                        name: TFDS dataset name (with optional config and version).
+                        split: Dataset split to use of the TFDS dataset.
+                        data_dir: The directory to read the prepared NSynth dataset from. Defaults
+                        to the public TFDS GCS bucket.
+                        sample_rate: Sample rate of audio in the dataset.
+                        frame_rate: Frame rate of features in the dataset.
+                        include_note_labels: Return dataset without note-level labels
+                        (pitch, instrument).
         """
         self._include_note_labels = include_note_labels
         super().__init__(name, split, data_dir, sample_rate, frame_rate)
@@ -94,26 +82,26 @@ class CustomNSynthTfds(ddsp.training.data.TfdsProvider):
         def preprocess_ex(ex):
             ex_out = {
                 'audio':
-                    ex['audio'],
-                    'f0_hz':
-                    ex['f0']['hz'],
-                    'f0_confidence':
-                    ex['f0']['confidence'],
-                    'loudness_db':
-                    ex['loudness']['db'],
+                ex['audio'],
+                'f0_hz':
+                ex['f0']['hz'],
+                'f0_confidence':
+                ex['f0']['confidence'],
+                'loudness_db':
+                ex['loudness']['db'],
             }
             if self._include_note_labels:
                 ex_out.update({
                     'pitch':
-                        ex['pitch'],
-                        'velocity':
-                        ex['velocity'],
-                        'instrument_source':
-                        ex['instrument']['source'],
-                        'instrument_family':
-                        ex['instrument']['family'],
-                        'instrument':
-                        ex['instrument']['label'],
+                    ex['pitch'],
+                    'velocity':
+                    ex['velocity'],
+                    'instrument_source':
+                    ex['instrument']['source'],
+                    'instrument_family':
+                    ex['instrument']['family'],
+                    'instrument':
+                    ex['instrument']['label'],
                 })
                 return ex_out
 
