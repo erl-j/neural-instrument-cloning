@@ -5,20 +5,20 @@ import random
 import tensorflow as tf
 from ddsp.training.data_preparation.prepare_tfrecord_lib import prepare_tfrecord
 
-SEED=0
-TST_SPLIT=0.2
-VAL_SPLIT=0.2
+SEED = 0
+TST_SPLIT = 0.2
+VAL_SPLIT = 0.2
 
-WINDOW_S=4
-TRN_HOP_SIZE=1
-COARSE_CHUNK_S=20.0
+WINDOW_S = 4
+TRN_HOP_SIZE = 1
+COARSE_CHUNK_S = 20.0
 
 random.seed(SEED)
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('input_audio_pattern', None,
-				  'Path to audio')
+                    'Path to audio')
 flags.DEFINE_integer('sample_rate', 16000,
                      'The sample rate to use for the audio.')
 flags.DEFINE_integer(
@@ -30,78 +30,81 @@ flags.DEFINE_string(
     'The prefix path to the output TFRecord. Shard numbers will be added to '
     'actual path(s).')
 
-fps=glob.glob("")
+fps = glob.glob("")
+
 
 def run():
-	input_audio_paths = glob.glob(FLAGS.input_audio_pattern)
+    input_audio_paths = glob.glob(FLAGS.input_audio_pattern)
 
-	# split into trn, val and test
-	random.shuffle(input_audio_paths)
-	n = len(input_audio_paths)
+    print(input_audio_paths)
 
-	n_tst=int(n*TST_SPLIT)
-	n_dev=n-n_tst
+    # split into trn, val and test
+    random.shuffle(input_audio_paths)
+    n = len(input_audio_paths)
 
-	dev_paths=input_audio_paths[:n_dev] 
-	tst_paths=input_audio_paths[n_dev:]
+    n_tst = int(n*TST_SPLIT)
+    n_dev = n-n_tst
 
-	n_val=int(0.2*n_dev)
-	n_trn=n_dev-n_val
+    dev_paths = input_audio_paths[:n_dev]
+    tst_paths = input_audio_paths[n_dev:]
 
-	trn_paths=dev_paths[:n_trn]
-	val_paths=dev_paths[n_trn:]
+    n_val = int(0.2*n_dev)
+    n_trn = n_dev-n_val
 
-	# for each audio file, we prepare a tfrecord
+    trn_paths = dev_paths[:n_trn]
+    val_paths = dev_paths[n_trn:]
 
-	def path2filename(path):
-		return path.split("/")[-1].split(".")[0]
+    # for each audio file, we prepare a tfrecord
 
-	for p in trn_paths:	
-		prepare_tfrecord(
-		[p],
-		FLAGS.output_tfrecord_path+"/trn/"+path2filename(p),
-		num_shards=1,
-		sample_rate=FLAGS.sample_rate,
-		frame_rate=FLAGS.frame_rate,
-		window_secs=WINDOW_S,
-		hop_secs=TRN_HOP_SIZE,
-		eval_split_fraction=0.0,
-		coarse_chunk_secs=COARSE_CHUNK_S)
-	
-	for p in val_paths:	
-		prepare_tfrecord(
-		[p],
-		FLAGS.output_tfrecord_path+"/val/"+path2filename(p),
-		num_shards=1,
-		sample_rate=FLAGS.sample_rate,
-		frame_rate=FLAGS.frame_rate,
-		window_secs=WINDOW_S,
-		hop_secs=WINDOW_S,
-		eval_split_fraction=0.0,
-		coarse_chunk_secs=COARSE_CHUNK_S)
+    def path2filename(path):
+        return path.split("/")[-1].split(".")[0]
 
-	for p in tst_paths:	
-		prepare_tfrecord(
-		[p],
-		FLAGS.output_tfrecord_path+"/tst/"+path2filename(p),
-		num_shards=1,
-		sample_rate=FLAGS.sample_rate,
-		frame_rate=FLAGS.frame_rate,
-		window_secs=WINDOW_S,
-		hop_secs=WINDOW_S,
-		eval_split_fraction=0.0,
-		coarse_chunk_secs=COARSE_CHUNK_S)
+    for p in trn_paths:
+        prepare_tfrecord(
+            [p],
+            FLAGS.output_tfrecord_path+"/trn/"+path2filename(p),
+            num_shards=1,
+            sample_rate=FLAGS.sample_rate,
+            frame_rate=FLAGS.frame_rate,
+            window_secs=WINDOW_S,
+            hop_secs=TRN_HOP_SIZE,
+            eval_split_fraction=0.0,
+            coarse_chunk_secs=COARSE_CHUNK_S)
+
+    for p in val_paths:
+        prepare_tfrecord(
+            [p],
+            FLAGS.output_tfrecord_path+"/val/"+path2filename(p),
+            num_shards=1,
+            sample_rate=FLAGS.sample_rate,
+            frame_rate=FLAGS.frame_rate,
+            window_secs=WINDOW_S,
+            hop_secs=WINDOW_S,
+            eval_split_fraction=0.0,
+            coarse_chunk_secs=COARSE_CHUNK_S)
+
+    for p in tst_paths:
+        prepare_tfrecord(
+            [p],
+            FLAGS.output_tfrecord_path+"/tst/"+path2filename(p),
+            num_shards=1,
+            sample_rate=FLAGS.sample_rate,
+            frame_rate=FLAGS.frame_rate,
+            window_secs=WINDOW_S,
+            hop_secs=WINDOW_S,
+            eval_split_fraction=0.0,
+            coarse_chunk_secs=COARSE_CHUNK_S)
 
 
 def main(unused_argv):
-	"""From command line."""
-	run()
+    """From command line."""
+    run()
 
 
 def console_entry_point():
-	"""From pip installed script."""
-	app.run(main)
+    """From pip installed script."""
+    app.run(main)
 
 
 if __name__ == '__main__':
-	console_entry_point()
+    console_entry_point()

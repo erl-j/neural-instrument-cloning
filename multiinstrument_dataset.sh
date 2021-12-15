@@ -1,0 +1,13 @@
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Bassoon/*" --output_tfrecord_path datasets/solos/tfr/Bassoon 
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Clarinet/*" --output_tfrecord_path datasets/solos/tfr/Clarinet     
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Flute/*" --output_tfrecord_path datasets/solos/tfr/Flute   
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Oboe/*" --output_tfrecord_path datasets/solos/tfr/Oboe        
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Trombone/*" --output_tfrecord_path datasets/solos/tfr/Trombone   
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Tuba/*" --output_tfrecord_path datasets/solos/tfr/Tuba    
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Violin/*" --output_tfrecord_path datasets/solos/tfr/Violin 
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Cello/*" --output_tfrecord_path datasets/solos/tfr/Cello     
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/DoubleBass/*" --output_tfrecord_path datasets/solos/tfr/DoubleBass   
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Horn/*" --output_tfrecord_path datasets/solos/tfr/Horn    
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Saxophone/*" --output_tfrecord_path datasets/solos/tfr/Saxophone   
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Trumpet/*" --output_tfrecord_path datasets/solos/tfr/Trumpet  
+python prepare_dataset.py --input_audio_pattern "datasets/solos/wav/Viola/*" --output_tfrecord_path datasets/solos/tfr/Viola 
