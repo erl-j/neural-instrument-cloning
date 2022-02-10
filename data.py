@@ -102,13 +102,12 @@ class CustomNSynthTfds(ddsp.training.data.TfdsProvider):
                     ex['instrument']['family'],
                     'instrument':
                     ex['instrument']['label'],
+                    'instrument_idx':
+                    int(ex['instrument']['label'])
                 })
                 return ex_out
 
         dataset = super().get_dataset(shuffle)
         dataset = dataset.map(
             preprocess_ex, num_parallel_calls=_AUTOTUNE)
-
-        dataset = add_instrument_idx(dataset)
-
         return dataset
