@@ -1,1 +1,0 @@
-docker build . -t njona_nic_image
