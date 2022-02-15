@@ -32,11 +32,9 @@ flags.DEFINE_string(
 
 def run():
     trn_paths = glob.glob(f"datasets/AIR/wav/dev/{FLAGS.input_audio_pattern}/*")
-    val_paths = glob.glob(f"datasets/AIR/wav/val/{FLAGS.input_audio_pattern}/*")
-    tst_paths=[]
+    val_paths = glob.glob(f"datasets/AIR/wav/tst/{FLAGS.input_audio_pattern}/*")
 
     # delete this
-    trn_paths=[]
     def path2filename(path):
             return path.split("/")[-1].split(".")[0]
 

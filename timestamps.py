@@ -12,7 +12,7 @@ TARGET_SR=44100
 # read timestamps
 df  = pd.read_csv('datasets/timestamps.csv')
 
-INSTRUMENTS = ["Bassoon","Clarinet","Flute","Horn","Oboe","Saxophone","Trombone","Trumpet","Tuba"]
+INSTRUMENTS = ["Flute","Oboe","Clarinet","Bassoon","Saxophone","Trumpet","Horn","Trombone","Tuba"]
 
 
 
@@ -53,29 +53,31 @@ for instrument in INSTRUMENTS:
 
     print(f"for {instrument} we have {len(test_entries)+len(dev_entries)}, {len(instrument_entries)} total entries, {len(test_entries)} test entries and {len(dev_entries)} dev entries")
 
-    if False:
-        for split in ["dev","test"]:
-            if split=="dev":
-                split_entries=dev_entries
-            else:
-                split_entries=test_entries
-            for entry in split_entries:
-                y,sr = librosa.load(f"datasets/solos/wav/{entry['filename']}",sr=TARGET_SR)
+
+    for split in ["dev","test"]:
+        if split=="dev":
+            split_entries=dev_entries
+        else:
+            split_entries=test_entries
+        for entry in split_entries:
+            y,sr = librosa.load(f"datasets/solos/wav/{entry['filename']}",sr=TARGET_SR)
+
+            for event_idx,event in enumerate(entry["events"]):
+                start=event["start"]
+                end=event["end"]
+   
+                start_sample=max(0,int(start*TARGET_SR))
+                end_sample=int(end*TARGET_SR)
+
+                out_path=f"AIR/normwav/{split}/{entry['filename'].replace('.wav','')}_part{event_idx}.wav"
+                os.makedirs("/".join(out_path.split("/")[:-1]), exist_ok=True)
 
                 # normalize audio
-                y=y/np.max(np.abs(y)+1e-10)
-                
-                for event_idx,event in enumerate(entry["events"]):
-                    start=event["start"]
-                    end=event["end"]
+                segment=y[start_sample:end_sample]
 
-                    start_sample=max(0,int(start*TARGET_SR))
-                    end_sample=int(end*TARGET_SR)
+                segment=segment/np.max(np.abs(segment)+1e-10)
 
-                    out_path=f"AIR/{split}/{entry['filename'].replace('.wav','')}_part{event_idx}.wav"
-                    os.makedirs("/".join(out_path.split("/")[:-1]), exist_ok=True)
-
-                    sf.write(out_path,y[start_sample:end_sample],TARGET_SR)
+                sf.write(out_path,segment,TARGET_SR)
 
 
 

@@ -1,18 +1,25 @@
 from glob import glob
 import os
 import glob
+from attr import dataclass
+import librosa
+import numpy as np
 
-for instrument in os.listdir("datasets/AIR/tfr48k/tst"):
-    file_names = glob.glob("datasets/AIR/tfr48k/tst/"+instrument+"/*")
-    for fn in file_names:
-        fn2=fn.replace("datasets/AIR/tfr48k/tst/","datasets/AIR/tfr48k/dev/")
-        if os.path.exists(fn2):
-            print("removing")
-            os.remove(fn2)
+for wav in glob.glob("datasets/AIR/wav/**/*.wav",recursive=True):
+    y,sr = librosa.load(wav)
+    print(np.max(np.abs(y)))
 
-tst_fn = [f.replace("datasets/AIR/wav/tst/","") for f in glob.glob("datasets/AIR/wav/tst/"+instrument+"/*") ]
-dev_fn = [f.replace("datasets/AIR/wav/dev/","") for f in glob.glob("datasets/AIR/wav/dev/"+instrument+"/*") ]
+# for instrument in os.listdir("datasets/AIR/tfr48k/tst"):
+#     file_names = glob.glob("datasets/AIR/tfr48k/tst/"+instrument+"/*")
+#     for fn in file_names:
+#         fn2=fn.replace("datasets/AIR/tfr48k/tst/","datasets/AIR/tfr48k/dev/")
+#         if os.path.exists(fn2):
+#             print("removing")
+#             os.remove(fn2)
 
-print(tst_fn)
-print(dev_fn)
-print(set(tst_fn).intersection(set(dev_fn)))
+# tst_fn = [f.replace("datasets/AIR/wav/tst/","") for f in glob.glob("datasets/AIR/wav/tst/"+instrument+"/*") ]
+# dev_fn = [f.replace("datasets/AIR/wav/dev/","") for f in glob.glob("datasets/AIR/wav/dev/"+instrument+"/*") ]
+
+# print(tst_fn)
+# print(dev_fn)
+# print(set(tst_fn).intersection(set(dev_fn)))
