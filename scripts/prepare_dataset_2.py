@@ -31,17 +31,19 @@ flags.DEFINE_string(
     'actual path(s).')
 
 def run():
-    trn_paths = glob.glob("datasets/AIR/wav/dev/Saxophone/*")
-    val_paths = glob.glob("datasets/AIR/wav/val/Saxophone/*")
+    trn_paths = glob.glob(f"datasets/AIR/wav/dev/{FLAGS.input_audio_pattern}/*")
+    val_paths = glob.glob(f"datasets/AIR/wav/val/{FLAGS.input_audio_pattern}/*")
     tst_paths=[]
 
+    # delete this
+    trn_paths=[]
     def path2filename(path):
             return path.split("/")[-1].split(".")[0]
 
     for p in trn_paths:
         prepare_tfrecord(
             [p],
-            FLAGS.output_tfrecord_path+"/trn/"+path2filename(p),
+            FLAGS.output_tfrecord_path+"/trn/"+FLAGS.input_audio_pattern+"/"+path2filename(p),
             num_shards=1,
             sample_rate=FLAGS.sample_rate,
             frame_rate=FLAGS.frame_rate,
@@ -53,7 +55,7 @@ def run():
     for p in val_paths:
         prepare_tfrecord(
             [p],
-            FLAGS.output_tfrecord_path+"/val/"+path2filename(p),
+            FLAGS.output_tfrecord_path+"/val/"+FLAGS.input_audio_pattern+"/"+path2filename(p),
             num_shards=1,
             sample_rate=FLAGS.sample_rate,
             frame_rate=FLAGS.frame_rate,
@@ -65,7 +67,7 @@ def run():
     for p in tst_paths:
         prepare_tfrecord(
             [p],
-            FLAGS.output_tfrecord_path+"/tst/"+path2filename(p),
+            FLAGS.output_tfrecord_path+"/tst/"+FLAGS.input_audio_pattern+"/"+path2filename(p),
             num_shards=1,
             sample_rate=FLAGS.sample_rate,
             frame_rate=FLAGS.frame_rate,
