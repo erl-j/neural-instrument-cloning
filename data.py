@@ -27,6 +27,7 @@ class MultiTFRecordProvider():
             instrument_dataset_provider = ddsp.training.data.TFRecordProvider(
                 f, self.example_secs, self.sample_rate, self.frame_rate)
             instrument_dataset = instrument_dataset_provider.get_dataset()
+            instrument_dataset=instrument_dataset.filter(lambda x: tf.math.count_nonzero(x["audio"])>0)
             instrument_dataset = instrument_dataset.map(
                 lambda x: {**x, "instrument": f, "instrument_idx": fi})
             if multi_dataset == None:
