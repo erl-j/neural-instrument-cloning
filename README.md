@@ -7,3 +7,7 @@ In this project we combine techniques from neural voice cloning and musical inst
 - [blogpost](https://erlj.notion.site/Neural-Instrument-Cloning-from-very-few-samples-2cf41d8b630842ee8c7eb55036a1bfd6).
 
 Preprint coming soon.
+
+Note that this is very much research code 🗑
+
+Also check out https://github.com/magenta/ddsp which our project builds upon.
