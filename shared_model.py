@@ -3,7 +3,7 @@ import ddsp
 import tensorflow as tf
 
 
-def get_model(SAMPLE_RATE,CLIP_S,FT_FRAME_RATE,Z_SIZE,N_INSTRUMENTS,IR_DURATION,BIDIRECTIONAL,USE_F0_CONFIDENCE,N_HARMONICS,N_NOISE_MAGNITUDES,losses={}):
+def get_model(SAMPLE_RATE,CLIP_S,FT_FRAME_RATE,Z_SIZE,N_INSTRUMENTS,IR_DURATION,BIDIRECTIONAL,USE_F0_CONFIDENCE,N_HARMONICS,N_NOISE_MAGNITUDES,losses=[]):
 
 
     class CustomRnnFcDecoder(ddsp.training.nn.OutputSplitsLayer):
@@ -64,7 +64,7 @@ def get_model(SAMPLE_RATE,CLIP_S,FT_FRAME_RATE,Z_SIZE,N_INSTRUMENTS,IR_DURATION,
             for weight_name,weight_metadata in self.instrument_weight_metadata.items():
                 self.instrument_weights[weight_name]=tf.Variable(weight_metadata["initializer"](self.n_instruments))
             
-        def call(self, batch, training=False):
+        def call(self, batch, training=True):
             for weight_name,weights in self.instrument_weights.items():
                 batch[weight_name]=tf.gather(weights,batch["instrument_idx"])
                 if "processing" in self.instrument_weight_metadata[weight_name]:

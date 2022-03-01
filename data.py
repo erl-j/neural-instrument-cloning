@@ -3,15 +3,14 @@ import tensorflow as tf
 _AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
-class MultiTFRecordProvider():
+class MultiTFRecordProvider(ddsp.training.data.DataProvider):
     """Class for reading records and returning a dataset."""
 
     def __init__(self, file_pattern=None, example_secs=4, sample_rate=16000, frame_rate=250):
         """TFRecordProvider constructor."""
         self.file_pattern = file_pattern
         self.example_secs = example_secs
-        self.sample_rate = sample_rate
-        self.frame_rate = frame_rate
+        super(MultiTFRecordProvider, self).__init__(sample_rate,frame_rate)
 
     def get_dataset(self, shuffle=False):
         """Read dataset.
@@ -38,6 +37,9 @@ class MultiTFRecordProvider():
             multi_dataset = multi_dataset.shuffle(1000)
 
         return multi_dataset
+
+
+
 
 # test_dp=MultiTFRecordProvider("datasets/solos-violin-clean/tfr/val/*",4,16000,250)
 
