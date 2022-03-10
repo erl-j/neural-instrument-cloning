@@ -34,7 +34,8 @@ class MultiTFRecordProvider(ddsp.training.data.DataProvider):
             multi_dataset = multi_dataset.concatenate(instrument_dataset)
 
         if shuffle:
-            multi_dataset = multi_dataset.shuffle(1000)
+            multi_dataset = multi_dataset.shuffle(100000)
+  
 
         return multi_dataset
 
