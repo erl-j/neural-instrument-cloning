@@ -34,6 +34,7 @@ tst_pattern="datasets/comparison_experiment/wav/tst/*"
 def run():
     dev_paths = glob.glob(f"{dev_pattern}")
 
+    dev_paths=[]
     tst_paths = glob.glob(f"{tst_pattern}")
 
     # delete this
@@ -50,7 +51,7 @@ def run():
             sample_rate=FLAGS.sample_rate,
             frame_rate=FLAGS.frame_rate,
             window_secs=WINDOW_S,
-            hop_secs=DEV_HOP_SIZE,
+            hop_secs=WINDOW_S,
             eval_split_fraction=0.0,
             coarse_chunk_secs=COARSE_CHUNK_S)
 
