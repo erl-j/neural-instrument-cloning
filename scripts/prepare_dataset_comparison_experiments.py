@@ -34,7 +34,6 @@ tst_pattern="datasets/comparison_experiment/wav/tst/*"
 def run():
     dev_paths = glob.glob(f"{dev_pattern}")
 
-    dev_paths=[]
     tst_paths = glob.glob(f"{tst_pattern}")
 
     # delete this

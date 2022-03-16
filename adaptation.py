@@ -84,8 +84,10 @@ def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path):
     DEMO_IR_SAMPLES=int(full_ir_duration*SAMPLE_RATE)
 
     test_model.set_is_shared_trainable(True)
+
     if checkpoint_path!=None:
         test_model.restore(checkpoint_path)
+        #test_model.load_weights(checkpoint_path)
 
     test_model.instrument_weight_metadata["ir"]["initializer"]=lambda batch_size: tf.zeros([batch_size,int(full_ir_duration*SAMPLE_RATE)])
 
@@ -97,7 +99,8 @@ def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path):
         er_amp[er_samples//2:er_samples]=np.linspace(1,0,er_samples//2)
 
         frame_rate=250
-        n_filter_bands=64
+        n_filter_bands=100
+
         n_frames=int(frame_rate*DEMO_IR_DURATION)
 
         ir_fn=ddsp.synths.FilteredNoise(n_samples=DEMO_IR_SAMPLES,
@@ -146,7 +149,7 @@ def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path):
 
 # constants
 
-TRAIN_DATA_DURATIONS = [4*(2**i) for i in range(7)]
+TRAIN_DATA_DURATIONS = [4*(2**i) for i in range(7)][4:]
 #TRAIN_DATA_DURATIONS=[16]
 BATCH_SIZE=1
 DEMO_IR_DURATION=1
@@ -162,14 +165,21 @@ tst_dataset=tst_data_provider.get_dataset(shuffle=False)
 tst_data_display=next(iter(tst_dataset.take(MAX_DISPLAY_SECONDS//CLIP_S).batch(MAX_DISPLAY_SECONDS//CLIP_S)))
 tst_data_display_wd=tf.data.Dataset.from_tensor_slices(join_and_window(tst_data_display,4,3)).batch(BATCH_SIZE)
 
+# check that no windowing is present
+# trn_data_test=next(iter(trn_dataset.take(3).batch(3)))
+# playback_and_save(tf.reshape(trn_data_test["audio"],[-1]),"trn data test","./comparison_experiments/")
+
+# tst_data_test=next(iter(tst_dataset.take(3).batch(3)))
+# playback_and_save(tf.reshape(tst_data_test["audio"],[-1]),"tst data test","./comparison_experiments/")
+
+
 # set adaptation strategy
-pretrained_checkpoint_path="./artefacts/training/Saxophone/ckpt-300000"
+pretrained_checkpoint_path="./artefacts/training/Saxophone/ckpt-380000"
 finetune_whole=False
 free_ir_duration=0.2
 ir_duration=1
 
 for train_data_duration in TRAIN_DATA_DURATIONS:
-
     model=get_finetuning_model(ir_duration,free_ir_duration,pretrained_checkpoint_path)
 
     # set learning rate and n epochs based on adaptation strategy
@@ -179,23 +189,26 @@ for train_data_duration in TRAIN_DATA_DURATIONS:
             lr=3e-5
             n_epochs=100
         if not finetune_whole:
-            lr=2e-3
+            lr=4*(4e-3)/(train_data_duration)
             n_epochs=100
     else:
         model.set_is_shared_trainable(True)
         lr=1e-4
         n_epochs=100
 
-    OUTPUT_PATH=f"comparison_experiment/{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}/"
+
+    print(f" train duration = {train_data_duration} lr={lr}")
+    OUTPUT_PATH=f"comparison_experiment/lr2_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
 
     trn_log_dir = OUTPUT_PATH + '/trn'
     tst_log_dir = OUTPUT_PATH + '/tst'
     trn_summary_writer = tf.summary.create_file_writer(trn_log_dir)
     tst_summary_writer = tf.summary.create_file_writer(tst_log_dir)
 
+    # load correct amount of training data and window it two
     trn_clips=train_data_duration//CLIP_S
-    # load correct amount of training data and window it
     trn_data=next(iter(trn_dataset.take(trn_clips).batch(trn_clips)))
+
     trn_data_batched=tf.data.Dataset.from_tensor_slices(join_and_window(trn_data,4,1)).batch(BATCH_SIZE)
     n_batches=len(list(trn_data_batched))
 
@@ -272,6 +285,19 @@ for train_data_duration in TRAIN_DATA_DURATIONS:
     playback_and_save(render_example(tst_data_display_wd,model),"unseen estimate",OUTPUT_PATH)
     
 asd
+
+
+
+
+
+
+
+
+
+
+
+
+
 # %%
 # render other examples
 
