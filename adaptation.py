@@ -100,7 +100,10 @@ def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path):
 
         frame_rate=250
         n_filter_bands=100
+<<<<<<< HEAD
 
+=======
+>>>>>>> 875e64a4e9b1818e2f2466894af9792098832ad8
         n_frames=int(frame_rate*DEMO_IR_DURATION)
 
         ir_fn=ddsp.synths.FilteredNoise(n_samples=DEMO_IR_SAMPLES,
@@ -182,6 +185,13 @@ ir_duration=1
 for train_data_duration in TRAIN_DATA_DURATIONS:
     model=get_finetuning_model(ir_duration,free_ir_duration,pretrained_checkpoint_path)
 
+    # load correct amount of training data and window it two ways
+    trn_clips=train_data_duration//CLIP_S
+    trn_data=next(iter(trn_dataset.take(trn_clips).batch(trn_clips)))
+
+    trn_data_batched=tf.data.Dataset.from_tensor_slices(join_and_window(trn_data,4,1)).batch(BATCH_SIZE)
+    n_batches=len(list(trn_data_batched))
+    
     # set learning rate and n epochs based on adaptation strategy
     if pretrained_checkpoint_path!=None:
         model.set_is_shared_trainable(finetune_whole)
@@ -205,6 +215,7 @@ for train_data_duration in TRAIN_DATA_DURATIONS:
     trn_summary_writer = tf.summary.create_file_writer(trn_log_dir)
     tst_summary_writer = tf.summary.create_file_writer(tst_log_dir)
 
+<<<<<<< HEAD
     # load correct amount of training data and window it two
     trn_clips=train_data_duration//CLIP_S
     trn_data=next(iter(trn_dataset.take(trn_clips).batch(trn_clips)))
@@ -212,6 +223,8 @@ for train_data_duration in TRAIN_DATA_DURATIONS:
     trn_data_batched=tf.data.Dataset.from_tensor_slices(join_and_window(trn_data,4,1)).batch(BATCH_SIZE)
     n_batches=len(list(trn_data_batched))
 
+=======
+>>>>>>> 875e64a4e9b1818e2f2466894af9792098832ad8
     trn_data_display=next(iter(trn_dataset.take(min(MAX_DISPLAY_SECONDS,train_data_duration)//CLIP_S).batch(min(MAX_DISPLAY_SECONDS,train_data_duration)//CLIP_S)))
     trn_data_display_wd=tf.data.Dataset.from_tensor_slices(join_and_window(trn_data_display,4,3)).batch(BATCH_SIZE)
 
@@ -240,6 +253,7 @@ for train_data_duration in TRAIN_DATA_DURATIONS:
                 batch_counter+=1
                 gradients = tape.gradient(loss_value, model.trainable_weights)
             optimizer.apply_gradients(zip(gradients, model.trainable_weights))
+
         trn_losses.append(epoch_loss/batch_counter)
 
         with trn_summary_writer.as_default():
