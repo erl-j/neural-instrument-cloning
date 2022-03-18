@@ -133,13 +133,6 @@ def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path):
 
     test_model.initialize_instrument_weights()
     test_model.set_is_shared_trainable(True)
-
-    #TMP_CHECKPOINT_PATH="./artefacts/tmp_checkpoint"
-    #test_model.save_weights(TMP_CHECKPOINT_PATH)
-    
-    #test_model.set_is_shared_trainable(True)
-    #test_model.load_weights(TMP_CHECKPOINT_PATH)
-    #test_model.initialize_instrument_weights()
     
     return test_model
 
@@ -163,14 +156,6 @@ tst_dataset=tst_data_provider.get_dataset(shuffle=False)
 
 tst_data_display=next(iter(tst_dataset.take(MAX_DISPLAY_SECONDS//CLIP_S).batch(MAX_DISPLAY_SECONDS//CLIP_S)))
 tst_data_display_wd=tf.data.Dataset.from_tensor_slices(join_and_window(tst_data_display,4,3)).batch(BATCH_SIZE)
-
-# check that no windowing is present
-# trn_data_test=next(iter(trn_dataset.take(3).batch(3)))
-# playback_and_save(tf.reshape(trn_data_test["audio"],[-1]),"trn data test","./comparison_experiments/")
-
-# tst_data_test=next(iter(tst_dataset.take(3).batch(3)))
-# playback_and_save(tf.reshape(tst_data_test["audio"],[-1]),"tst data test","./comparison_experiments/")
-
 
 # set adaptation strategy
 pretrained_checkpoint_path="./artefacts/training/Saxophone/ckpt-380000"
@@ -203,7 +188,6 @@ for train_data_duration in TRAIN_DATA_DURATIONS:
         lr=1e-4
         n_epochs=100
 
-
     print(f" train duration = {train_data_duration} lr={lr}")
     OUTPUT_PATH=f"comparison_experiment/lrlong_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
 
@@ -232,7 +216,6 @@ for train_data_duration in TRAIN_DATA_DURATIONS:
 
     trn_losses=[]
     tst_losses=[]
-
 
     latest_test_loss=None
     for epoch_count in tqdm.tqdm(range(n_epochs)):
