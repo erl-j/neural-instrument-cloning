@@ -146,43 +146,14 @@ tst_data_display=next(iter(tst_dataset.take(MAX_DISPLAY_SECONDS//CLIP_S).batch(M
 tst_data_display_wd=tf.data.Dataset.from_tensor_slices(join_and_window(tst_data_display,4,3)).batch(BATCH_SIZE)
 
 # set adaptation strategy
-pretrained_checkpoint_path="./artefacts/training/**_WITHOUT_SAX/ckpt-558000"
-finetune_whole=False
+pretrained_checkpoint_path="./artefacts/training/Saxophone/ckpt-380000"
+finetune_whole=True
 free_ir_duration=0.2
 ir_duration=1
 
 USE_PRETRAINING_INSTRUMENTS=False
-TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [4*(2**i) for i in range(7)][4:]
+TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [256] #[4*(2**i) for i in range(7)][4:]
 instrument_idxs=range(27) if USE_PRETRAINING_INSTRUMENTS else [0]
-
-# PRETRAIN_FROM_SCRATCH=True
-
-# if PRETRAIN_FROM_SCRATCH:
-#     strategy =  tf.distribute.MirroredStrategy(cross_device_ops=tf.distribute.HierarchicalCopyAllReduce())
-
-#     with strategy.scope():
-#         model=get_finetuning_model(ir_duration,free_ir_duration,None,reset_parts=not USE_PRETRAINING_INSTRUMENTS,use_loss=True)
-#         model.set_is_shared_trainable(True)
-#         trainer=ddsp.training.trainers.Trainer(
-#                     model,
-#                     strategy,
-#                     checkpoints_to_keep=10,
-#                     lr_decay_steps=10000,
-#                     learning_rate=1e-4,
-#                     lr_decay_rate=0.98,
-#                     grad_clip_norm=100000.0)
-
-#     ddsp.training.train_util.train(
-#             trn_data_provider,
-#             trainer,
-#             batch_size=6,
-#             num_steps=1000000,
-#             steps_per_summary=1000,
-#             steps_per_save=1000,
-#             save_dir="comparison_experiment/scratch_model/trained_on_all/",
-#             restore_dir="comparison_experiment/scratch_model/trained_on_all/",
-#             early_stop_loss_value=None,
-#             report_loss_to_hypertune=False)
 
 
 for instrument_idx in instrument_idxs:
@@ -231,7 +202,7 @@ for instrument_idx in instrument_idxs:
                 n_epochs=2000
 
         print(f" train duration = {train_data_duration} lr={lr}")
-        OUTPUT_PATH=f"comparison_experiment/nosax/nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
+        OUTPUT_PATH=f"comparison_experiment/whole/nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
 
         trn_log_dir = OUTPUT_PATH + '/trn'
         tst_log_dir = OUTPUT_PATH + '/tst'
