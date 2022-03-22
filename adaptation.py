@@ -146,13 +146,13 @@ tst_data_display=next(iter(tst_dataset.take(MAX_DISPLAY_SECONDS//CLIP_S).batch(M
 tst_data_display_wd=tf.data.Dataset.from_tensor_slices(join_and_window(tst_data_display,4,3)).batch(BATCH_SIZE)
 
 # set adaptation strategy
-pretrained_checkpoint_path="./artefacts/training/Saxophone/ckpt-380000"
+pretrained_checkpoint_path=None#"./artefacts/training/Saxophone/ckpt-380000"
 finetune_whole=True
 free_ir_duration=0.2
 ir_duration=1
 
 USE_PRETRAINING_INSTRUMENTS=False
-TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [256] #[4*(2**i) for i in range(7)][4:]
+TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [256,128] #[4*(2**i) for i in range(7)][4:]
 instrument_idxs=range(27) if USE_PRETRAINING_INSTRUMENTS else [0]
 
 
@@ -193,16 +193,16 @@ for instrument_idx in instrument_idxs:
                     n_epochs=100
                 if not finetune_whole:
                     lr=3e-3
-                    n_epochs=100
+                    n_epochs=100 
             # no pretraining
             else:
                 print("no pretraining")
                 model.set_is_shared_trainable(True)
                 lr=3e-5
-                n_epochs=2000
+                n_epochs=300
 
         print(f" train duration = {train_data_duration} lr={lr}")
-        OUTPUT_PATH=f"comparison_experiment/whole/nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
+        OUTPUT_PATH=f"comparison_experiment/scratch100/nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
 
         trn_log_dir = OUTPUT_PATH + '/trn'
         tst_log_dir = OUTPUT_PATH + '/tst'

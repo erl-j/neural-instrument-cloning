@@ -77,6 +77,12 @@ for scheme in SCHEMES:
             losses=[summaries[f"{scheme}_{duration}_{split}"]["loss"] for duration in TRN_DATA_DURATIONS]
             plt.plot(exponents,losses,label=f"{scheme}_{split}")
 
+# add crosses on points if they don't have audio examples
+for scheme in SCHEMES:
+    for duration in TRN_DATA_DURATIONS:
+        if not summaries[f"{scheme}_{duration}_tst"]["has_audio_examples"]:
+            plt.plot(exponents[TRN_DATA_DURATIONS.index(duration)],summaries[f"{scheme}_{duration}_tst"]["loss"],'x')
+
 # set ticks equally spaced at trn data durations
 plt.xticks(exponents,TRN_DATA_DURATIONS)
 plt.legend()
@@ -85,6 +91,8 @@ plt.legend()
 # add dotted horizontal line at nearest and label on the right
 plt.hlines(nearest,0,len(TRN_DATA_DURATIONS),linestyles="dotted")
 plt.text(len(TRN_DATA_DURATIONS)-0.5,nearest,f"nearest")
+
+
 
 # plt.hlines(furthest,0,len(TRN_DATA_DURATIONS),linestyles="dotted")
 # plt.text(0.5,furthest,f"furthest",horizontalalignment="center")
