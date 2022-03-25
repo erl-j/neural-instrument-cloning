@@ -63,9 +63,9 @@ def stitch(audios):
 # %%
 # LOAD MODEL FOR FINETUNING
 
-def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path,reset_parts=True,use_loss=False):
+def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path,reset_parts=True,use_loss=False,use_f0_confidence=True):
     # load model
-    test_model=shared_model.get_model(SAMPLE_RATE,CLIP_S,FT_FRAME_RATE,Z_SIZE,N_INSTRUMENTS,IR_DURATION,BIDIRECTIONAL,USE_F0_CONFIDENCE,N_HARMONICS,N_NOISE_MAGNITUDES,losses=[spectral_loss] if use_loss else [])
+    test_model=shared_model.get_model(SAMPLE_RATE,CLIP_S,FT_FRAME_RATE,Z_SIZE,N_INSTRUMENTS,IR_DURATION,BIDIRECTIONAL,USE_F0_CONFIDENCE=use_f0_confidence,N_HARMONICS=N_HARMONICS,N_NOISE_MAGNITUDES=N_NOISE_MAGNITUDES,losses=[spectral_loss] if use_loss else [])
     # load model weights       
 
     DEMO_IR_SAMPLES=int(full_ir_duration*SAMPLE_RATE)
@@ -145,14 +145,17 @@ tst_dataset=tst_data_provider.get_dataset(shuffle=False)
 tst_data_display=next(iter(tst_dataset.take(MAX_DISPLAY_SECONDS//CLIP_S).batch(MAX_DISPLAY_SECONDS//CLIP_S)))
 tst_data_display_wd=tf.data.Dataset.from_tensor_slices(join_and_window(tst_data_display,4,3)).batch(BATCH_SIZE)
 
+
+USE_F0_CONFIDENCE=False
+
 # set adaptation strategy
-pretrained_checkpoint_path=None#"./artefacts/training/Saxophone/ckpt-380000"
+pretrained_checkpoint_path=None #"./artefacts/training/Saxophone/ckpt-380000"
 finetune_whole=True
-free_ir_duration=0.2
+free_ir_duration=1
 ir_duration=1
 
 USE_PRETRAINING_INSTRUMENTS=False
-TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [256,128] #[4*(2**i) for i in range(7)][4:]
+TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [4,8,16,32,64,128,256]
 instrument_idxs=range(27) if USE_PRETRAINING_INSTRUMENTS else [0]
 
 
@@ -170,7 +173,7 @@ for instrument_idx in instrument_idxs:
         return stitch(audio)
         
     for train_data_duration in TRAIN_DATA_DURATIONS:
-        model=get_finetuning_model(ir_duration,free_ir_duration,pretrained_checkpoint_path,reset_parts=not USE_PRETRAINING_INSTRUMENTS)
+        model=get_finetuning_model(ir_duration,free_ir_duration,pretrained_checkpoint_path,reset_parts=not USE_PRETRAINING_INSTRUMENTS,use_f0_confidence=USE_F0_CONFIDENCE)
 
         # load correct amount of training data and window it two ways
         trn_clips=train_data_duration//CLIP_S
@@ -193,16 +196,17 @@ for instrument_idx in instrument_idxs:
                     n_epochs=100
                 if not finetune_whole:
                     lr=3e-3
-                    n_epochs=100 
+                    n_epochs=300 
             # no pretraining
             else:
                 print("no pretraining")
                 model.set_is_shared_trainable(True)
                 lr=3e-5
-                n_epochs=300
+                train_data_duration_2_epochs={4:2900,8:1000,16:1000,32:1000,64:1000,128:300,256:300}
+                n_epochs=train_data_duration_2_epochs[train_data_duration]
 
-        print(f" train duration = {train_data_duration} lr={lr}")
-        OUTPUT_PATH=f"comparison_experiment/scratch100/nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
+        print(f" train duration = {train_data_duration} lr={lr} n_epochs={n_epochs}")
+        OUTPUT_PATH=f"comparison_experiment/freeir/use_f0_confidence={USE_F0_CONFIDENCE}_nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
 
         trn_log_dir = OUTPUT_PATH + '/trn'
         tst_log_dir = OUTPUT_PATH + '/tst'
@@ -288,6 +292,7 @@ for instrument_idx in instrument_idxs:
         playback_and_save(render_example(trn_data_display_wd,model,"loudness_db",lambda x:x-6),"loudness down 6 db",OUTPUT_PATH)
         playback_and_save(render_example(trn_data_display_wd,model,"loudness_db",lambda x:x+6),"loudness up 6 db",OUTPUT_PATH)
         playback_and_save(render_example(trn_data_display_wd,model,"loudness_db",lambda x:x+12),"loudness up 12 db",OUTPUT_PATH)
+
         playback_and_save(render_example(trn_data_display_wd,model,"f0_confidence",lambda x:x*0.8),"pitch confidence * 0.8",OUTPUT_PATH)
         playback_and_save(render_example(trn_data_display_wd,model,"f0_confidence",lambda x:x*0.5),"pitch confidence * 0.5",OUTPUT_PATH)
 
