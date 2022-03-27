@@ -146,12 +146,12 @@ tst_data_display=next(iter(tst_dataset.take(MAX_DISPLAY_SECONDS//CLIP_S).batch(M
 tst_data_display_wd=tf.data.Dataset.from_tensor_slices(join_and_window(tst_data_display,4,3)).batch(BATCH_SIZE)
 
 
-USE_F0_CONFIDENCE=False
+USE_F0_CONFIDENCE=True
 
 # set adaptation strategy
-pretrained_checkpoint_path=None #"./artefacts/training/Saxophone/ckpt-380000"
+pretrained_checkpoint_path="./artefacts/training/**_WITHOUT_SAX/ckpt-558000" # None #"./artefacts/training/Saxophone/ckpt-380000"
 finetune_whole=True
-free_ir_duration=1
+free_ir_duration=0.2
 ir_duration=1
 
 USE_PRETRAINING_INSTRUMENTS=False
@@ -206,7 +206,7 @@ for instrument_idx in instrument_idxs:
                 n_epochs=train_data_duration_2_epochs[train_data_duration]
 
         print(f" train duration = {train_data_duration} lr={lr} n_epochs={n_epochs}")
-        OUTPUT_PATH=f"comparison_experiment/freeir/use_f0_confidence={USE_F0_CONFIDENCE}_nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
+        OUTPUT_PATH=f"comparison_experiment/nosax/use_f0_confidence={USE_F0_CONFIDENCE}_nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
 
         trn_log_dir = OUTPUT_PATH + '/trn'
         tst_log_dir = OUTPUT_PATH + '/tst'

@@ -12,10 +12,9 @@ from tensorflow.core.util import event_pb2
 import math
 #%%
 
-ROOT_DIR="../comparison_plot_data/plot"
+ROOT_DIR="../plot"
 
 SCHEMES=["scratch","sax_whole","sax_partial"]
-
 
 summaries={}
 
@@ -23,9 +22,7 @@ TRN_DATA_DURATIONS=[4,8,16,32,64,128,256]
 for scheme in SCHEMES:
     scheme_dir=f"{ROOT_DIR}/{scheme}"
     fps=os.listdir(scheme_dir)
-
     for duration in TRN_DATA_DURATIONS:
-
         fp=list(filter(lambda x: f"trn_data_duration={duration}_" in x,fps))[0]
         for split in ["tst","trn"]:
             split_dir=f"{scheme_dir}/{fp}/{split}"
