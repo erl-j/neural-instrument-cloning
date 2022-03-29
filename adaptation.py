@@ -73,8 +73,10 @@ def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path,reset
     test_model.set_is_shared_trainable(True)
 
     if checkpoint_path!=None:
-        test_model.restore(checkpoint_path)
-        #test_model.load_weights(checkpoint_path)
+        if "48k_bidir" in checkpoint_path:
+            test_model.load_weights(checkpoint_path)
+        else:
+            test_model.restore(checkpoint_path)
 
     if reset_parts:
 
@@ -85,6 +87,8 @@ def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path,reset
             er_samples=int(free_ir_duration*SAMPLE_RATE)
 
             er_amp=np.ones((er_samples))
+
+            
             er_amp[er_samples//2:er_samples]=np.linspace(1,0,er_samples//2)
 
             frame_rate=250
@@ -111,7 +115,11 @@ def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path,reset
                 fn_mags=tf.reshape(batched_feature[:,er_samples:],[batch_size,n_frames,n_filter_bands])
                 fn_ir=ir_fn(fn_mags)
 
-                ir=fn_ir*fn_amp+tf.pad(er_ir,[[0,0],[0,int(full_ir_duration*SAMPLE_RATE)-er_samples]])*er_amp
+
+                if free_ir_duration>0.0:
+                    ir=fn_ir*fn_amp+tf.pad(er_ir,[[0,0],[0,int(full_ir_duration*SAMPLE_RATE)-er_samples]])*er_amp
+                else:
+                    ir=fn_ir
 
                 #ir = ddsp.core.fft_convolve( fn_ir,er_ir, padding='same', delay_compensation=0)
                 return ir
@@ -126,38 +134,56 @@ def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path,reset
     return test_model
 
 # %%
-# HP TUNING ON OTHER SET?
 
-# constants
+parser=argparse.ArgumentParser()
+parser.add_argument('--pretrained_checkpoint_path',default=None)
+parser.add_argument('--cloning_dataset_path',default=None)
+parser.add_argument('--finetune_whole', action='store_true')
 
-#TRAIN_DATA_DURATIONS=[16]
+
+args=parser.parse_args()
+
+print(args)
+
 BATCH_SIZE=1
 DEMO_IR_DURATION=1
 MAX_DISPLAY_SECONDS=32
 
-# comparison tst
-trn_data_provider=data.MultiTFRecordProvider(f"datasets/comparison_experiment/tfr/dev/*",sample_rate=SAMPLE_RATE)
-trn_dataset= trn_data_provider.get_dataset(shuffle=False)
-
-tst_data_provider=data.MultiTFRecordProvider(f"datasets/comparison_experiment/tfr/tst/*",sample_rate=SAMPLE_RATE)
-tst_dataset=tst_data_provider.get_dataset(shuffle=False)
-
-tst_data_display=next(iter(tst_dataset.take(MAX_DISPLAY_SECONDS//CLIP_S).batch(MAX_DISPLAY_SECONDS//CLIP_S)))
-tst_data_display_wd=tf.data.Dataset.from_tensor_slices(join_and_window(tst_data_display,4,3)).batch(BATCH_SIZE)
-
-
-USE_F0_CONFIDENCE=True
+USE_F0_CONFIDENCE=False
 
 # set adaptation strategy
-pretrained_checkpoint_path="./artefacts/training/**_WITHOUT_SAX/ckpt-558000" # None #"./artefacts/training/Saxophone/ckpt-380000"
-finetune_whole=True
-free_ir_duration=0.2
+#pretrained_checkpoint_path="./artefacts/training/**_WITHOUT_SAX/ckpt-558000" # None #
+#pretrained_checkpoint_path="./artefacts/training/Saxophone/ckpt-380000"
+ 
+pretrained_checkpoint_path=args.pretrained_checkpoint_path
+finetune_whole=args.finetune_whole
+
+free_ir_duration=0
 ir_duration=1
 
 USE_PRETRAINING_INSTRUMENTS=False
-TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [4,8,16,32,64,128,256]
+TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [4,8,16,32]
 instrument_idxs=range(27) if USE_PRETRAINING_INSTRUMENTS else [0]
 
+cloning_dataset_path=args.cloning_dataset_path
+
+if cloning_dataset_path==None:
+    # comparison tst
+    trn_data_provider=data.MultiTFRecordProvider(f"datasets/comparison_experiment/tfr/dev/*",sample_rate=SAMPLE_RATE)
+    trn_dataset= trn_data_provider.get_dataset(shuffle=False)
+    tst_data_provider=data.MultiTFRecordProvider(f"datasets/comparison_experiment/tfr/tst/*",sample_rate=SAMPLE_RATE)
+    tst_dataset=tst_data_provider.get_dataset(shuffle=False)
+else:
+    data_provider=data.MultiTFRecordProvider(cloning_dataset_path,sample_rate=SAMPLE_RATE)
+    dataset=data_provider.get_dataset(shuffle=False)    
+    print(len(list(dataset)))
+
+    set_clips=32//CLIP_S
+    trn_dataset=dataset.take(set_clips)
+    tst_dataset=dataset.skip(set_clips).take(set_clips)
+
+tst_data_display=next(iter(tst_dataset.take(MAX_DISPLAY_SECONDS//CLIP_S).batch(MAX_DISPLAY_SECONDS//CLIP_S)))
+tst_data_display_wd=tf.data.Dataset.from_tensor_slices(join_and_window(tst_data_display,4,3)).batch(BATCH_SIZE)
 
 for instrument_idx in instrument_idxs:
     def render_example(dataset,model, transform_key=None,transform_fn=lambda x:x):
@@ -196,7 +222,7 @@ for instrument_idx in instrument_idxs:
                     n_epochs=100
                 if not finetune_whole:
                     lr=3e-3
-                    n_epochs=300 
+                    n_epochs=300 if train_data_duration<32 else 100
             # no pretraining
             else:
                 print("no pretraining")
@@ -206,7 +232,7 @@ for instrument_idx in instrument_idxs:
                 n_epochs=train_data_duration_2_epochs[train_data_duration]
 
         print(f" train duration = {train_data_duration} lr={lr} n_epochs={n_epochs}")
-        OUTPUT_PATH=f"comparison_experiment/nosax/use_f0_confidence={USE_F0_CONFIDENCE}_nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
+        OUTPUT_PATH=f"comparison_experiment/fn_only/{cloning_dataset_path}/use_f0_confidence={USE_F0_CONFIDENCE}_nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
 
         trn_log_dir = OUTPUT_PATH + '/trn'
         tst_log_dir = OUTPUT_PATH + '/tst'

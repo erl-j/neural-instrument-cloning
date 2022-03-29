@@ -2,6 +2,7 @@
 
 import pandas as pd
 from matplotlib import pyplot as plt
+from pyrsistent import s
 import seaborn as sns
 from scipy import stats
 import tensorboard as tb
@@ -14,7 +15,13 @@ import math
 
 ROOT_DIR="../plot"
 
-SCHEMES=["scratch","sax_whole","sax_partial"]
+
+
+SCHEMES=os.listdir(ROOT_DIR)
+
+SCHEMES=list(filter(lambda x: not x.startswith("sax_pretrained_only"),SCHEMES))
+
+print(SCHEMES)
 
 summaries={}
 
@@ -29,6 +36,7 @@ for scheme in SCHEMES:
 
             event_fp=glob.glob(f"{split_dir}/*.v2")[-1]
 
+
             for summary in tf.compat.v1.train.summary_iterator(event_fp):
                 for v in summary.summary.value:
                     #print(v.tag)
@@ -42,7 +50,7 @@ print(summaries)
 # %%
 
 
-PRETRAINED_DIR="../comparison_plot_data/plot/sax_pretrained_only"
+PRETRAINED_DIR="../plot/sax_pretrained_only"
 
 pretrained_test_losses=[]
 
@@ -79,59 +87,90 @@ scheme_display_names={
     "sax_partial":"FINETUNE PARTS"
 }
 
+print(SCHEMES)
+
+scheme_display_names =  {**{k:k for k in SCHEMES}, **scheme_display_names}
+
+print(scheme_display_names)
+
 split_display_names={
     "tst":"val",
     "trn":"trn"
 }
 
-# plot losses, tst as solid, trn as dashed, colour according to scheme
+# plot losses, tst as solid, trn as dashed, colour according to scheme.
 exponents=[math.log(d,2)-1 for d in TRN_DATA_DURATIONS]
-for scheme in SCHEMES:
-        for split in ["tst"]:
-            losses=[summaries[f"{scheme}_{duration}_{split}"]["loss"] for duration in TRN_DATA_DURATIONS]  
-            color=sns.color_palette("Set2")[SCHEMES.index(scheme)]
-            plt.plot(exponents,losses,label=f"{scheme_display_names[scheme]}, {split_display_names[split]}",linestyle="--" if split=="trn" else "-",color=color)          
 
-PLOT_TRN=True
-if PLOT_TRN:
+EXPERIMENTS=[
+    ["scratch_nof0c","scratch"],
+    ["scratch","scratch_free_reverb"],
+    #["scratch_nof0c","scratch_nof0c_free_reverb","scratch","scratch_free_reverb"],
+    ["scratch","sax_partial","sax_whole"],
+    ["scratch","sax_whole","swc_nosax_whole"],
+    ["scratch","sax_partial","swc_nosax_partial"],
+]
+
+COLOR_PALETTE=sns.color_palette("deep",len(SCHEMES))
+
+for DISPLAY_SCHEMES in EXPERIMENTS:
+
+    # 
+
+    PLOT_TST=True
+    if PLOT_TST:
+        for scheme in DISPLAY_SCHEMES:
+                for split in ["tst"]:
+                    losses=[summaries[f"{scheme}_{duration}_{split}"]["loss"] for duration in TRN_DATA_DURATIONS]  
+                    color=COLOR_PALETTE[SCHEMES.index(scheme)]
+                    plt.plot(exponents,losses,label=f"{scheme_display_names[scheme]}, {split_display_names[split]}",linestyle="--" if split=="trn" else "-",color=color)          
+
+    PLOT_TRN=True
+    if PLOT_TRN:
+        for scheme in DISPLAY_SCHEMES:
+                for split in ["trn"]:
+                    losses=[summaries[f"{scheme}_{duration}_{split}"]["loss"] for duration in TRN_DATA_DURATIONS]  
+                    color=COLOR_PALETTE[SCHEMES.index(scheme)]
+                    plt.plot(exponents,losses,label=f"{scheme_display_names[scheme]}, {split_display_names[split]}",linestyle="--" if split=="trn" else "-",color=color,alpha=0.5)          
+
+    # y axis starts at 0 and ends at the maximum loss
+    plt.ylim(6,17)
+
+    # set ticks equally spaced at trn data durations
+    plt.xticks(exponents,TRN_DATA_DURATIONS)
+    plt.legend()
+
+    # add dotted horizontal line at nearest and label on the right
+
+    #plt.axhline(nearest,0,len(TRN_DATA_DURATIONS),linestyle=":",alpha=1,label="NEAREST")
+    #plt.text(len(TRN_DATA_DURATIONS)-0.5,nearest,f"nearest")
+
+    # add crosses on points if they don't have audio examples
     for scheme in SCHEMES:
-            for split in ["trn"]:
-                losses=[summaries[f"{scheme}_{duration}_{split}"]["loss"] for duration in TRN_DATA_DURATIONS]  
-                color=sns.color_palette("Set2")[SCHEMES.index(scheme)]
-                plt.plot(exponents,losses,label=f"{scheme_display_names[scheme]}, {split_display_names[split]}",linestyle="--" if split=="trn" else "-",color=color)          
+        for duration in TRN_DATA_DURATIONS:
+            if not summaries[f"{scheme}_{duration}_tst"]["has_audio_examples"]:
+                plt.plot(exponents[TRN_DATA_DURATIONS.index(duration)],summaries[f"{scheme}_{duration}_tst"]["loss"],'x')
+    # show plot
+    plt.legend()
+    plt.xlabel("Training data duration (seconds)")
+    plt.ylabel("Multiscale spectral loss")
+    plt.title("Loss vs Training data duration")
+
+    # make lines thicker
+    for i,line in enumerate(plt.gca().lines):
+        line.set_linewidth(2)
 
 
-# y axis starts at 0
-plt.ylim(0,furthest)
+    # make figure wider
+    plt.gcf().set_size_inches(10,10)
 
-# set ticks equally spaced at trn data durations
-plt.xticks(exponents,TRN_DATA_DURATIONS)
-plt.legend()
+    plt.figure(figsize=(10,10))
 
-# add dotted horizontal line at nearest and label on the right
+    # hide legend
 
-plt.axhline(nearest,0,len(TRN_DATA_DURATIONS),linestyle=":",alpha=1,label="NEAREST")
-#plt.text(len(TRN_DATA_DURATIONS)-0.5,nearest,f"nearest")
+    plt.show()
 
 
-
-
-# add crosses on points if they don't have audio examples
-for scheme in SCHEMES:
-    for duration in TRN_DATA_DURATIONS:
-        if not summaries[f"{scheme}_{duration}_tst"]["has_audio_examples"]:
-            plt.plot(exponents[TRN_DATA_DURATIONS.index(duration)],summaries[f"{scheme}_{duration}_tst"]["loss"],'x')
-
-
-
-# show plot
-plt.legend()
-plt.xlabel("Training data duration (seconds)")
-plt.ylabel("Multiscale spectral loss")
-plt.title("Loss vs Training data duration")
-plt.show()
-
-
+# %%
 
 # %%
 
