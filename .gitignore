@@ -1,13 +1,9 @@
 # artefacts
-comparison_experiment/
-comparison_plot_data/
 artefacts/
 tmp/
 logdir  
-Solos
-Edyson
-datasets
-plot/
+datasets/
+paper/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

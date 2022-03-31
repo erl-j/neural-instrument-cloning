@@ -13,13 +13,13 @@ from tensorflow.core.util import event_pb2
 import math
 #%%
 
-ROOT_DIR="../plot"
+ROOT_DIR="../paper/experiments"
 
 
 
 SCHEMES=os.listdir(ROOT_DIR)
 
-SCHEMES=list(filter(lambda x: not x.startswith("sax_pretrained_only"),SCHEMES))
+SCHEMES=list(filter(lambda x: not x.startswith("sax-pretraining"),SCHEMES))
 
 print(SCHEMES)
 
@@ -49,8 +49,7 @@ for scheme in SCHEMES:
 print(summaries)
 # %%
 
-
-PRETRAINED_DIR="../plot/sax_pretrained_only"
+PRETRAINED_DIR="../paper/experiments/sax-pretraining"
 
 pretrained_test_losses=[]
 
@@ -82,9 +81,6 @@ sns.set_context("paper")
 #sns.set_style("ticks", {'grid.linestyle': '-'})
 
 scheme_display_names={
-    "scratch":"FROM SCRATCH",
-    "sax_whole":"FINETUNE WHOLE",
-    "sax_partial":"FINETUNE PARTS"
 }
 
 print(SCHEMES)
@@ -94,20 +90,21 @@ scheme_display_names =  {**{k:k for k in SCHEMES}, **scheme_display_names}
 print(scheme_display_names)
 
 split_display_names={
-    "tst":"val",
-    "trn":"trn"
+    "tst":"test",
+    "trn":"train"
 }
 
 # plot losses, tst as solid, trn as dashed, colour according to scheme.
 exponents=[math.log(d,2)-1 for d in TRN_DATA_DURATIONS]
 
 EXPERIMENTS=[
-    ["scratch_nof0c","scratch"],
-    ["scratch","scratch_free_reverb"],
-    #["scratch_nof0c","scratch_nof0c_free_reverb","scratch","scratch_free_reverb"],
-    ["scratch","sax_partial","sax_whole"],
-    ["scratch","sax_whole","swc_nosax_whole"],
-    ["scratch","sax_partial","swc_nosax_partial"],
+    ["init-whole-no_f0conf","init-whole"],
+    ["init-whole","init-whole-free_reverb","init-whole-fn_reverb"],
+    #["init-whole-no_f0conf","init-whole-no_f0conf-free_reverb","init-whole","init-whole-free_reverb"],
+    ["init-whole","sax-parts","sax-whole"],
+    ["init-whole","sax-whole","nosax-whole"],
+    ["init-whole","sax-parts","nosax-parts"],
+    ["init-whole","sax-parts","nosax-parts","sax-whole","nosax-whole"]
 ]
 
 COLOR_PALETTE=sns.color_palette("deep",len(SCHEMES))
@@ -130,7 +127,7 @@ for DISPLAY_SCHEMES in EXPERIMENTS:
                 for split in ["trn"]:
                     losses=[summaries[f"{scheme}_{duration}_{split}"]["loss"] for duration in TRN_DATA_DURATIONS]  
                     color=COLOR_PALETTE[SCHEMES.index(scheme)]
-                    plt.plot(exponents,losses,label=f"{scheme_display_names[scheme]}, {split_display_names[split]}",linestyle="--" if split=="trn" else "-",color=color,alpha=0.5)          
+                    plt.plot(exponents,losses,label=f"{scheme_display_names[scheme]}, {split_display_names[split]}",linestyle="--" if split=="trn" else "-",color=color,alpha=0.7)          
 
     # y axis starts at 0 and ends at the maximum loss
     plt.ylim(6,17)
@@ -151,27 +148,24 @@ for DISPLAY_SCHEMES in EXPERIMENTS:
                 plt.plot(exponents[TRN_DATA_DURATIONS.index(duration)],summaries[f"{scheme}_{duration}_tst"]["loss"],'x')
     # show plot
     plt.legend()
-    plt.xlabel("Training data duration (seconds)")
+    plt.xlabel("Training data size (seconds)")
     plt.ylabel("Multiscale spectral loss")
-    plt.title("Loss vs Training data duration")
+    #plt.title("Loss vs Training data duration")
 
     # make lines thicker
     for i,line in enumerate(plt.gca().lines):
-        line.set_linewidth(2)
+        line.set_linewidth(1.5)
 
 
     # make figure wider
-    plt.gcf().set_size_inches(10,10)
+    #plt.gcf().set_size_inches(10,10)
 
-    plt.figure(figsize=(10,10))
+    #plt.figure(figsize=(10,10))
 
     # hide legend
 
+    # make sure that figures don't turn out blank when saved
+    # plt.tight_layout()
+    plt.savefig("../paper/plots/"+"_".join(DISPLAY_SCHEMES)+".png")
+
     plt.show()
-
-
-# %%
-
-# %%
-
-# %%
