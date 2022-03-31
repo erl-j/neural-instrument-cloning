@@ -33,20 +33,20 @@ plt.figure(figsize=(20,10))
 
 
 plt.subplot(3,1,1)
-plt.plot(x,f0_contour,label="f0 contour (Hz)",color="black")
+plt.plot(x,f0_contour,label="f0 contour (Hz)",color="darkblue")
 # label y axis
 plt.ylabel("F0 (Hz)")
 plt.xticks([])
 
 plt.subplot(3,1,2)
-plt.plot(x,f0confidence_contour,label="f0 confidence contour",color="black")
+plt.plot(x,f0confidence_contour,label="f0 confidence contour",color="darkblue")
 # label y axis
 plt.ylabel("F0 confidence")
 # hide x axis
 plt.xticks([])
 
 plt.subplot(3,1,3)
-plt.plot(x,loudness_contour,label="loudness contour (db)",color="black")
+plt.plot(x,loudness_contour,label="loudness contour (db)",color="darkblue")
 # label y axis
 plt.ylabel("Loudness (db)")
 

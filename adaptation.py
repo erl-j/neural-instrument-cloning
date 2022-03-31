@@ -157,12 +157,12 @@ USE_F0_CONFIDENCE=True
 pretrained_checkpoint_path=args.pretrained_checkpoint_path
 finetune_whole=args.finetune_whole
 
-free_ir_duration=0
+free_ir_duration=0.2
 ir_duration=1
 summary_interval = 10
 
 USE_PRETRAINING_INSTRUMENTS=False
-TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [8,16,32]
+TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [32]
 instrument_idxs=range(27) if USE_PRETRAINING_INSTRUMENTS else [0]
 
 cloning_dataset_path=args.cloning_dataset_path

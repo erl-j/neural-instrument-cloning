@@ -16,21 +16,39 @@ import math
 ROOT_DIR="../paper/experiments"
 
 
+# SCHEMES=os.listdir(ROOT_DIR)
 
-SCHEMES=os.listdir(ROOT_DIR)
+# SCHEMES=list(filter(lambda x: not x.startswith("sax-pretraining"),SCHEMES))
 
-SCHEMES=list(filter(lambda x: not x.startswith("sax-pretraining"),SCHEMES))
+# print(SCHEMES)
 
-print(SCHEMES)
+SCHEMES=[
+'sax-parts',
+'nosax-parts',
+'sax-whole',
+'nosax-whole', 
+'init-whole',
+'init-whole-fn_reverb',
+'init-whole-free_reverb', 
+'init-whole-no_f0conf',
+#'init-whole-no_f0conf-free_reverb',
+]
+
 
 summaries={}
 
+
 TRN_DATA_DURATIONS=[4,8,16,32,64,128,256]
+
+fig,axes=plt.subplots(nrows=len(SCHEMES),ncols=len(TRN_DATA_DURATIONS),sharex=False,sharey=True,figsize=(2*8.27,2*11.69))
+
+
 for scheme in SCHEMES:
     scheme_dir=f"{ROOT_DIR}/{scheme}"
     fps=os.listdir(scheme_dir)
     for duration in TRN_DATA_DURATIONS:
         fp=list(filter(lambda x: f"trn_data_duration={duration}_" in x,fps))[0]
+        losses={"tst":{"step":[],"loss":[]},"trn":{"step":[],"loss":[]}}
         for split in ["tst","trn"]:
             split_dir=f"{scheme_dir}/{fp}/{split}"
 
@@ -43,11 +61,52 @@ for scheme in SCHEMES:
                     if v.tag=="loss":
                         #print(v.simple_value)
                         t = tf.make_ndarray(v.tensor)
+                        losses[split]["loss"].append(t)
+                        losses[split]["step"].append(summary.step)
                         #print(v.tag, summary.step, t, type(t))
             summaries[f"{scheme}_{duration}_{split}"]={"n_steps":summary.step,"loss":float(t),"has_audio_examples":os.path.exists(f"{scheme_dir}/{fp}/unseen estimate.wav")}
-                
+        # add the losses to the plot
+        axes[SCHEMES.index(scheme),TRN_DATA_DURATIONS.index(duration)].plot(losses["trn"]["step"],losses["trn"]["loss"],label=f"trn")
+        axes[SCHEMES.index(scheme),TRN_DATA_DURATIONS.index(duration)].plot(losses["tst"]["step"],losses["tst"]["loss"],label=f"tst")
+        # set y limit to 20
+        axes[SCHEMES.index(scheme),TRN_DATA_DURATIONS.index(duration)].set_ylim(6,20)
+
+        # remove margins
+        axes[SCHEMES.index(scheme),TRN_DATA_DURATIONS.index(duration)].margins(x=0)
+# give figure same aspect ratio as an A4 paper
+
+
+FONT_SIZE=17
+
+# label columns with training data durations
+for i,duration in enumerate(TRN_DATA_DURATIONS):
+    axes[0,i].set_title(f"{duration} s",fontsize=FONT_SIZE)
+
+# label rows with schemes with a large font
+for i,scheme in enumerate(SCHEMES):
+    axes[i,0].set_ylabel(scheme,fontsize=FONT_SIZE)
+
+# add legend for whole figure
+axes[0,-1].legend(loc="upper right")
+
+fig.tight_layout()
+
+# reduce vertical space between subplots
+fig.subplots_adjust(hspace=0.1)
+
+# reduce horizontal space between subplots
+fig.subplots_adjust(wspace=0.03)
+
+
+
+
+plt.savefig("../paper/plots/loss_plots.png")
+plt.show()
+
+plt.clf()
+
 print(summaries)
-# %%
+ # %%
 
 PRETRAINED_DIR="../paper/experiments/sax-pretraining"
 
@@ -169,3 +228,5 @@ for DISPLAY_SCHEMES in EXPERIMENTS:
     plt.savefig("../paper/plots/"+"_".join(DISPLAY_SCHEMES)+".png")
 
     plt.show()
+
+# %%
