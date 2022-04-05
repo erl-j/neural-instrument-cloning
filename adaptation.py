@@ -63,7 +63,7 @@ def stitch(audios):
 # %%
 # LOAD MODEL FOR FINETUNING
 
-def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path,reset_parts=True,use_loss=False,use_f0_confidence=True):
+def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path,reset_parts=True,use_loss=False,use_f0_confidence=True,use_id_activation_on_free_reverb=False):
     # load model
     test_model=shared_model.get_model(SAMPLE_RATE,CLIP_S,FT_FRAME_RATE,Z_SIZE,N_INSTRUMENTS,IR_DURATION,BIDIRECTIONAL,USE_F0_CONFIDENCE=use_f0_confidence,N_HARMONICS=N_HARMONICS,N_NOISE_MAGNITUDES=N_NOISE_MAGNITUDES,losses=[spectral_loss] if use_loss else [])
     # load model weights       
@@ -127,8 +127,15 @@ def get_finetuning_model(full_ir_duration,free_ir_duration,checkpoint_path,reset
             test_model.instrument_weight_metadata["ir"]["initializer"]=lambda batch_size: tf.zeros([batch_size,er_samples+n_frames*n_filter_bands])
             test_model.instrument_weight_metadata["wet_gain"]["initializer"]=lambda batch_size: tf.ones([batch_size,1])*0.5
 
+        elif use_id_activation_on_free_reverb:
+            print("USING ID ACTIVATION ON FREE REVERB")
+            test_model.instrument_weight_metadata["ir"]["processing"]=lambda x: x
+            test_model.instrument_weight_metadata["wet_gain"]["initializer"]=lambda batch_size: tf.ones([batch_size,1])*0.5
+
         test_model.initialize_instrument_weights()
         test_model.set_is_shared_trainable(True)
+
+    
     
     return test_model
 
@@ -138,11 +145,9 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--pretrained_checkpoint_path',default=None)
 parser.add_argument('--cloning_dataset_path',default=None)
 parser.add_argument('--finetune_whole', action='store_true')
-
+parser.add_argument('--id_activation_on_free_reverb', action='store_true')
 
 args=parser.parse_args()
-
-print(args)
 
 BATCH_SIZE=1
 DEMO_IR_DURATION=1
@@ -161,9 +166,11 @@ free_ir_duration=0.2
 ir_duration=1
 summary_interval = 10
 
-USE_PRETRAINING_INSTRUMENTS=False
-TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [32]
-instrument_idxs=range(27) if USE_PRETRAINING_INSTRUMENTS else [0]
+USE_ID_ACTIVATION_ON_FREE_REVERB=args.id_activation_on_free_reverb
+
+USE_PRETRAINING_INSTRUMENTS=True
+TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [64,128]
+instrument_idxs=range(200) if USE_PRETRAINING_INSTRUMENTS else [0]
 
 cloning_dataset_path=args.cloning_dataset_path
 
@@ -211,7 +218,7 @@ for instrument_idx in instrument_idxs:
         return stitch(audio)
         
     for train_data_duration in TRAIN_DATA_DURATIONS:
-        model=get_finetuning_model(ir_duration,free_ir_duration,pretrained_checkpoint_path,reset_parts=not USE_PRETRAINING_INSTRUMENTS,use_f0_confidence=USE_F0_CONFIDENCE)
+        model=get_finetuning_model(ir_duration,free_ir_duration,pretrained_checkpoint_path,reset_parts=not USE_PRETRAINING_INSTRUMENTS,use_f0_confidence=USE_F0_CONFIDENCE,use_id_activation_on_free_reverb=USE_ID_ACTIVATION_ON_FREE_REVERB)
 
         # load correct amount of training data and window it two ways
         trn_clips=train_data_duration//CLIP_S
@@ -244,7 +251,7 @@ for instrument_idx in instrument_idxs:
                 n_epochs=train_data_duration_2_epochs[train_data_duration]
 
         print(f" train duration = {train_data_duration} lr={lr} n_epochs={n_epochs}")
-        OUTPUT_PATH=f"paper/comparison_experiment/transfer3/{cloning_dataset_path}/use_f0_confidence={USE_F0_CONFIDENCE}_nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
+        OUTPUT_PATH=f"paper/comparison_experiment/nosaxnearest/{cloning_dataset_path}/use_f0_confidence={USE_F0_CONFIDENCE}_nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
 
         trn_log_dir = OUTPUT_PATH + '/trn'
         tst_log_dir = OUTPUT_PATH + '/tst'
@@ -260,8 +267,6 @@ for instrument_idx in instrument_idxs:
 
         trn_data_display=next(iter(trn_dataset.take(min(MAX_DISPLAY_SECONDS,train_data_duration)//CLIP_S).batch(min(MAX_DISPLAY_SECONDS,train_data_duration)//CLIP_S)))
         trn_data_display_wd=tf.data.Dataset.from_tensor_slices(join_and_window(trn_data_display,4,3)).batch(BATCH_SIZE)
-
-        
 
         # batch tst data
         tst_data_batched=tst_dataset.batch(BATCH_SIZE)

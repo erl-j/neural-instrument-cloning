@@ -31,7 +31,8 @@ SCHEMES=[
 'init-whole-fn_reverb',
 'init-whole-free_reverb', 
 'init-whole-no_f0conf',
-#'init-whole-no_f0conf-free_reverb',
+'init-whole-free_reverb-no_tanh',
+'init-whole-no_f0conf-free_reverb',
 ]
 
 
@@ -129,8 +130,33 @@ for fp in fps:
                     #print(v.tag, summary.step, t, type(t))
                 pretrained_test_losses.append(float(t))
                 
-nearest=min(pretrained_test_losses)
-furthest=max(pretrained_test_losses)
+sax_nearest=min(pretrained_test_losses)
+sax_furthest=max(pretrained_test_losses)
+ # %%
+
+PRETRAINED_DIR="../paper/experiments/nosax-pretraining"
+
+pretrained_test_losses=[]
+
+fps=os.listdir(PRETRAINED_DIR)
+
+for fp in fps:
+    for split in ["tst"]:
+        split_dir=f"{PRETRAINED_DIR}/{fp}/**/{split}"
+
+        event_fp=glob.glob(f"{split_dir}/*.v2",recursive=True)[0]
+
+        for summary in tf.compat.v1.train.summary_iterator(event_fp):
+            for v in summary.summary.value:
+                #print(v.tag)
+                if v.tag=="loss":
+                    #print(v.simple_value)
+                    t = tf.make_ndarray(v.tensor)
+                    #print(v.tag, summary.step, t, type(t))
+                pretrained_test_losses.append(float(t))
+                
+nosax_nearest=min(pretrained_test_losses)
+nosax_furthest=max(pretrained_test_losses)
 #%% PLOT
 
 # make figure look nice
@@ -158,18 +184,18 @@ exponents=[math.log(d,2)-1 for d in TRN_DATA_DURATIONS]
 
 EXPERIMENTS=[
     ["init-whole-no_f0conf","init-whole"],
-    ["init-whole","init-whole-free_reverb","init-whole-fn_reverb"],
-    #["init-whole-no_f0conf","init-whole-no_f0conf-free_reverb","init-whole","init-whole-free_reverb"],
+    ["init-whole","init-whole-fn_reverb","init-whole-free_reverb"],
+    ["init-whole-no_f0conf","init-whole-no_f0conf-free_reverb","init-whole","init-whole-free_reverb"],
     ["init-whole","sax-parts","sax-whole"],
     ["init-whole","sax-whole","nosax-whole"],
     ["init-whole","sax-parts","nosax-parts"],
-    ["init-whole","sax-parts","nosax-parts","sax-whole","nosax-whole"]
+    ["init-whole","sax-parts","nosax-parts","sax-whole","nosax-whole"],
+    ["init-whole","init-whole-free_reverb-no_tanh","init-whole-fn_reverb","init-whole-free_reverb"],
 ]
 
 COLOR_PALETTE=sns.color_palette("deep",len(SCHEMES))
 
 for DISPLAY_SCHEMES in EXPERIMENTS:
-
     # 
 
     PLOT_TST=True
@@ -197,7 +223,12 @@ for DISPLAY_SCHEMES in EXPERIMENTS:
 
     # add dotted horizontal line at nearest and label on the right
 
-    #plt.axhline(nearest,0,len(TRN_DATA_DURATIONS),linestyle=":",alpha=1,label="NEAREST")
+
+    if "sax-parts" in DISPLAY_SCHEMES and "sax-whole" in DISPLAY_SCHEMES:
+        plt.axhline(sax_nearest,0,len(TRN_DATA_DURATIONS),linestyle=":",alpha=1,label="sax-nearest",color="blue")
+        if "nosax-parts" in DISPLAY_SCHEMES and "nosax-whole" in DISPLAY_SCHEMES:
+
+            plt.axhline(nosax_nearest,0,len(TRN_DATA_DURATIONS),linestyle=":",alpha=1,label="nosax-nearest",color="red")
     #plt.text(len(TRN_DATA_DURATIONS)-0.5,nearest,f"nearest")
 
     # add crosses on points if they don't have audio examples
@@ -228,5 +259,16 @@ for DISPLAY_SCHEMES in EXPERIMENTS:
     plt.savefig("../paper/plots/"+"_".join(DISPLAY_SCHEMES)+".png")
 
     plt.show()
+
+
+# %%
+
+# %%
+
+# %%
+
+# %%
+
+# %%
 
 # %%
