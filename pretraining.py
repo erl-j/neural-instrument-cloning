@@ -6,7 +6,7 @@ USE_NSYNTH=False
 #INSTRUMENT_FAMILY="**_WHITHOUT_SAX"
 #INSTRUMENT_FAMILY="Saxophone"
 
-INSTRUMENT_FAMILY="**"
+INSTRUMENT_FAMILY="Trombone"
 # %%
 if USE_NSYNTH:
     tfds.load("nsynth/gansynth_subset.f0_and_loudness",split="train", try_gcs=False,download=True) 

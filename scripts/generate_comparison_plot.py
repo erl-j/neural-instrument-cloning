@@ -11,6 +11,7 @@ import glob
 import tensorflow as tf
 from tensorflow.core.util import event_pb2
 import math
+from collections import *
 #%%
 
 ROOT_DIR="../paper/experiments"
@@ -114,6 +115,7 @@ PRETRAINED_DIR="../paper/experiments/sax-pretraining"
 pretrained_test_losses=[]
 
 fps=os.listdir(PRETRAINED_DIR)
+event_fps=[]
 
 for fp in fps:
     for split in ["tst"]:
@@ -129,8 +131,13 @@ for fp in fps:
                     t = tf.make_ndarray(v.tensor)
                     #print(v.tag, summary.step, t, type(t))
                 pretrained_test_losses.append(float(t))
+                event_fps.append(event_fp)
+
+
                 
 sax_nearest=min(pretrained_test_losses)
+sax_nearest_idx=pretrained_test_losses.index(sax_nearest)
+print(event_fps[sax_nearest_idx])
 sax_furthest=max(pretrained_test_losses)
  # %%
 
@@ -154,9 +161,14 @@ for fp in fps:
                     t = tf.make_ndarray(v.tensor)
                     #print(v.tag, summary.step, t, type(t))
                 pretrained_test_losses.append(float(t))
-                
+                event_fps.append(event_fp)
+
 nosax_nearest=min(pretrained_test_losses)
+nosax_nearest_idx=pretrained_test_losses.index(nosax_nearest)
+print(event_fps[nosax_nearest_idx])
+
 nosax_furthest=max(pretrained_test_losses)
+
 #%% PLOT
 
 # make figure look nice
@@ -195,75 +207,81 @@ EXPERIMENTS=[
 
 COLOR_PALETTE=sns.color_palette("deep",len(SCHEMES))
 
+# assign colors to schemes
+scheme_colors={}
+for i,scheme in enumerate(SCHEMES):
+    scheme_colors[scheme]=COLOR_PALETTE[i]
+
+
+
 for DISPLAY_SCHEMES in EXPERIMENTS:
+    # add dotted horizontal line at nearest
+
+    if "sax-parts" in DISPLAY_SCHEMES and "sax-whole" in DISPLAY_SCHEMES:
+        plt.axhline(sax_nearest,0,len(TRN_DATA_DURATIONS),linestyle=":",alpha=1,color="blue")
+        # add label
+        plt.text(2.3*len(TRN_DATA_DURATIONS)/4,sax_nearest+0.1,f"sax-nearest",fontsize=8.5,color="blue")
+        if "nosax-parts" in DISPLAY_SCHEMES and "nosax-whole" in DISPLAY_SCHEMES:
+            plt.axhline(nosax_nearest,0,len(TRN_DATA_DURATIONS),linestyle=":",alpha=1,color="red")
+            # add label
+            plt.text(2.3*len(TRN_DATA_DURATIONS)/4,nosax_nearest+0.1,f"nosax-nearest",fontsize=8.5,color="red")
+        
     # 
 
+    data={
+            "x":[],
+            "y":[],
+            "approach":[],
+            "split":[],
+    }
     PLOT_TST=True
     if PLOT_TST:
         for scheme in DISPLAY_SCHEMES:
                 for split in ["tst"]:
                     losses=[summaries[f"{scheme}_{duration}_{split}"]["loss"] for duration in TRN_DATA_DURATIONS]  
-                    color=COLOR_PALETTE[SCHEMES.index(scheme)]
-                    plt.plot(exponents,losses,label=f"{scheme_display_names[scheme]}, {split_display_names[split]}",linestyle="--" if split=="trn" else "-",color=color)          
+                    data["x"].extend(exponents)
+                    data["y"].extend(losses)
+                    data["approach"].extend([scheme_display_names[scheme]]*len(losses))
+                    data["split"].extend([split_display_names[split]]*len(losses))
 
     PLOT_TRN=True
     if PLOT_TRN:
         for scheme in DISPLAY_SCHEMES:
                 for split in ["trn"]:
                     losses=[summaries[f"{scheme}_{duration}_{split}"]["loss"] for duration in TRN_DATA_DURATIONS]  
-                    color=COLOR_PALETTE[SCHEMES.index(scheme)]
-                    plt.plot(exponents,losses,label=f"{scheme_display_names[scheme]}, {split_display_names[split]}",linestyle="--" if split=="trn" else "-",color=color,alpha=0.7)          
+                    data["x"].extend(exponents)
+                    data["y"].extend(losses)
+                    data["approach"].extend([scheme_display_names[scheme]]*len(losses))
+                    data["split"].extend([split_display_names[split]]*len(losses))
+        
+    # use scheme_colors to assign colors to schemes
 
+    sns.lineplot(data=data,x="x",y="y",hue="approach",style="split",palette=scheme_colors)
+    
     # y axis starts at 0 and ends at the maximum loss
     plt.ylim(6,17)
 
     # set ticks equally spaced at trn data durations
     plt.xticks(exponents,TRN_DATA_DURATIONS)
-    plt.legend()
-
-    # add dotted horizontal line at nearest and label on the right
-
-
-    if "sax-parts" in DISPLAY_SCHEMES and "sax-whole" in DISPLAY_SCHEMES:
-        plt.axhline(sax_nearest,0,len(TRN_DATA_DURATIONS),linestyle=":",alpha=1,label="sax-nearest",color="blue")
-        if "nosax-parts" in DISPLAY_SCHEMES and "nosax-whole" in DISPLAY_SCHEMES:
-
-            plt.axhline(nosax_nearest,0,len(TRN_DATA_DURATIONS),linestyle=":",alpha=1,label="nosax-nearest",color="red")
-    #plt.text(len(TRN_DATA_DURATIONS)-0.5,nearest,f"nearest")
 
     # add crosses on points if they don't have audio examples
     for scheme in SCHEMES:
         for duration in TRN_DATA_DURATIONS:
             if not summaries[f"{scheme}_{duration}_tst"]["has_audio_examples"]:
                 plt.plot(exponents[TRN_DATA_DURATIONS.index(duration)],summaries[f"{scheme}_{duration}_tst"]["loss"],'x')
-    # show plot
-    plt.legend()
+
     plt.xlabel("Training data size (seconds)")
     plt.ylabel("Multiscale spectral loss")
-    #plt.title("Loss vs Training data duration")
 
     # make lines thicker
     for i,line in enumerate(plt.gca().lines):
         line.set_linewidth(1.5)
 
-
-    # make figure wider
-    #plt.gcf().set_size_inches(10,10)
-
-    #plt.figure(figsize=(10,10))
-
-    # hide legend
-
-    # make sure that figures don't turn out blank when saved
-    # plt.tight_layout()
     plt.savefig("../paper/plots/"+"_".join(DISPLAY_SCHEMES)+".png")
 
     plt.show()
 
 
-# %%
-
-# %%
 
 # %%
 
