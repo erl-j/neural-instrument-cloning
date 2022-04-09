@@ -3,10 +3,10 @@ from constants import *
 
 # %%
 USE_NSYNTH=False
-#INSTRUMENT_FAMILY="**_WHITHOUT_SAX"
+INSTRUMENT_FAMILY="**"
 #INSTRUMENT_FAMILY="Saxophone"
 
-INSTRUMENT_FAMILY="Trombone"
+#INSTRUMENT_FAMILY="Trombone"
 # %%
 if USE_NSYNTH:
     tfds.load("nsynth/gansynth_subset.f0_and_loudness",split="train", try_gcs=False,download=True) 
@@ -34,13 +34,13 @@ else:
         trn_path=f"datasets/AIRnoSax/tfr/dev/**/*"
         val_path=f"datasets/AIRnoSax/tfr/tst/**/*"
     
-    trn_data_provider=data.MultiTFRecordProvider(trn_path,sample_rate=SAMPLE_RATE)
+    trn_data_provider=data.MultiTFRecordProvider(trn_path,sample_rate=SAMPLE_RATE,n_max_instruments=N_INSTRUMENTS)
     val_data_provider=data.MultiTFRecordProvider(val_path,sample_rate=SAMPLE_RATE)
     trn_dataset= trn_data_provider.get_dataset()
     val_dataset=val_data_provider.get_dataset(shuffle=False)
     
 # remove some samples if number of recordings greater than model capacity
-trn_dataset = trn_dataset.filter(lambda x: int(x["instrument_idx"])<N_INSTRUMENTS)
+
 
 # %%
 checkpoint_path=f"checkpoints/48k_{'bidir' if BIDIRECTIONAL else 'unidir'}_z{Z_SIZE}_conv_family_{INSTRUMENT_FAMILY}{'_f0c' if USE_F0_CONFIDENCE else ''}"

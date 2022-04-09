@@ -6,10 +6,11 @@ _AUTOTUNE = tf.data.experimental.AUTOTUNE
 class MultiTFRecordProvider(ddsp.training.data.DataProvider):
     """Class for reading records and returning a dataset."""
 
-    def __init__(self, file_pattern=None, example_secs=4, sample_rate=16000, frame_rate=250):
+    def __init__(self, file_pattern=None, example_secs=4, sample_rate=16000, frame_rate=250, n_max_instruments=200):
         """TFRecordProvider constructor."""
         self.file_pattern = file_pattern
         self.example_secs = example_secs
+        self.n_max_instruments = n_max_instruments
         super(MultiTFRecordProvider, self).__init__(sample_rate,frame_rate)
 
     def get_dataset(self, shuffle=False):
@@ -36,6 +37,8 @@ class MultiTFRecordProvider(ddsp.training.data.DataProvider):
         if shuffle:
             multi_dataset = multi_dataset.shuffle(100000)
   
+        if self.n_max_instruments:
+            multi_dataset_dataset = multi_dataset.filter(lambda x: int(x["instrument_idx"])<self.n_max_instruments)
 
         return multi_dataset
 
