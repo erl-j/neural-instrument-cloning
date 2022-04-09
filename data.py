@@ -37,8 +37,8 @@ class MultiTFRecordProvider(ddsp.training.data.DataProvider):
         if shuffle:
             multi_dataset = multi_dataset.shuffle(100000)
   
-        if self.n_max_instruments:
-            multi_dataset_dataset = multi_dataset.filter(lambda x: int(x["instrument_idx"])<self.n_max_instruments)
+        if self.n_max_instruments is not None:
+            multi_dataset = multi_dataset.filter(lambda x: int(x["instrument_idx"])<self.n_max_instruments)
 
         return multi_dataset
 

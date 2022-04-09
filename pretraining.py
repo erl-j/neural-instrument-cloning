@@ -35,7 +35,7 @@ else:
         val_path=f"datasets/AIRnoSax/tfr/tst/**/*"
     
     trn_data_provider=data.MultiTFRecordProvider(trn_path,sample_rate=SAMPLE_RATE,n_max_instruments=N_INSTRUMENTS)
-    val_data_provider=data.MultiTFRecordProvider(val_path,sample_rate=SAMPLE_RATE)
+    val_data_provider=data.MultiTFRecordProvider(val_path,sample_rate=SAMPLE_RATE,n_max_instruments=N_INSTRUMENTS)
     trn_dataset= trn_data_provider.get_dataset()
     val_dataset=val_data_provider.get_dataset(shuffle=False)
     
