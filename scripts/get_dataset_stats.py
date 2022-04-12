@@ -1,10 +1,11 @@
+#%%
 import os
 import librosa
-
+import datetime
 
 for split in ["tst","dev"]:
     for instrument_name in ["Bassoon","Clarinet","Flute","Horn","Oboe","Saxophone","Trumpet","Trombone","Tuba"]:
-        target_dir=f"Air clean wavs/{split}/{instrument_name}"
+        target_dir=f"../datasets/AIR/wav/{split}/{instrument_name}"
 
         # how many wav files are in directory
         n_files=len([filename for filename in os.listdir(target_dir) if filename.endswith(".wav")])
@@ -22,6 +23,9 @@ for split in ["tst","dev"]:
                 print(f"instrument_name={instrument_name}, split={split}, filename={filename}, duration={len(y)/sr}")
                 s+=len(y)/sr
 
-        print(f"summary > instrument_name={instrument_name}, split={split}, n_files={n_files}, n_recordings={n_recordings}, total_duration={s}, avg duration={s/n_files} ")
+        #print(f"summary > instrument_name={instrument_name}, split={split}, n_files={n_files}, n_recordings={n_recordings}, total_duration={s}, avg duration={s/n_files} ")
+        # same but duration in h:m:s
+        print(f"summary > instrument_name={instrument_name}, split={split}, n_files={n_files}, n_recordings={n_recordings}, total_duration={datetime.timedelta(seconds=int(s))}, avg duration={datetime.timedelta(seconds=int(s/n_files))} ")
 
 
+# %%
