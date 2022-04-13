@@ -5,7 +5,6 @@ import random
 import tensorflow as tf
 from ddsp.training.data_preparation.prepare_tfrecord_lib import prepare_tfrecord
 
-
 SEED = 0
 
 WINDOW_S = 4

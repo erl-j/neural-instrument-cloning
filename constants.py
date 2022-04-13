@@ -17,7 +17,7 @@ import pydash
 import tqdm
 import soundfile
 import os
-import shared_model
+import model
 import pandas as pd
 import datetime
 import glob

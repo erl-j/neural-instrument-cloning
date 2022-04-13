@@ -53,7 +53,7 @@ training_savedir=f"./artefacts/training/{INSTRUMENT_FAMILY}"
 strategy =  tf.distribute.MirroredStrategy(cross_device_ops=tf.distribute.HierarchicalCopyAllReduce())
 
 with strategy.scope():
-    model=shared_model.get_model(SAMPLE_RATE,CLIP_S,FT_FRAME_RATE,Z_SIZE,N_INSTRUMENTS,IR_DURATION,BIDIRECTIONAL,USE_F0_CONFIDENCE,N_HARMONICS,N_NOISE_MAGNITUDES,losses=[spectral_loss])
+    model=model.get_model(SAMPLE_RATE,CLIP_S,FT_FRAME_RATE,Z_SIZE,N_INSTRUMENTS,IR_DURATION,BIDIRECTIONAL,USE_F0_CONFIDENCE,N_HARMONICS,N_NOISE_MAGNITUDES,losses=[spectral_loss])
     model.set_is_shared_trainable(True)
     trainer=ddsp.training.trainers.Trainer(
                 model,

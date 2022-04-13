@@ -23,8 +23,3 @@ with open("../paper/experiments/tst_ids.txt","w") as f:
 with open("../paper/experiments/trn_ids.txt","w") as f:
     for id in trn_ids:
         f.write(id+"\n")
-
-# use youtube api to get video uploader
-
-
-# %%
