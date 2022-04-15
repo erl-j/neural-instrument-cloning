@@ -168,8 +168,8 @@ summary_interval = 10
 
 USE_ID_ACTIVATION_ON_FREE_REVERB=args.id_activation_on_free_reverb
 
-USE_PRETRAINING_INSTRUMENTS=True
-TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [64,128]
+USE_PRETRAINING_INSTRUMENTS=False
+TRAIN_DATA_DURATIONS = [4] if USE_PRETRAINING_INSTRUMENTS else [16]
 instrument_idxs=range(200) if USE_PRETRAINING_INSTRUMENTS else [0]
 
 cloning_dataset_path=args.cloning_dataset_path
@@ -251,7 +251,7 @@ for instrument_idx in instrument_idxs:
                 n_epochs=train_data_duration_2_epochs[train_data_duration]
 
         print(f" train duration = {train_data_duration} lr={lr} n_epochs={n_epochs}")
-        OUTPUT_PATH=f"paper/comparison_experiment/nosaxnearest/{cloning_dataset_path}/use_f0_confidence={USE_F0_CONFIDENCE}_nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
+        OUTPUT_PATH=f"paper/comparison_experiment/demos_w_octave_pitch_shift/{cloning_dataset_path}/use_f0_confidence={USE_F0_CONFIDENCE}_nr_{instrument_idx}_{pretrained_checkpoint_path}_trn_data_duration={train_data_duration}_finetunewhole={finetune_whole}_free_ir={free_ir_duration}_lr={lr}/"
 
         trn_log_dir = OUTPUT_PATH + '/trn'
         tst_log_dir = OUTPUT_PATH + '/tst'
@@ -331,6 +331,8 @@ for instrument_idx in instrument_idxs:
         playback_and_save(render_example(trn_data_display_wd,model),"training estimate",OUTPUT_PATH)
         playback_and_save(render_example(trn_data_display_wd,model,"f0_hz",lambda x:x*(3/4)),"transposed down a fourth",OUTPUT_PATH)
         playback_and_save(render_example(trn_data_display_wd,model,"f0_hz",lambda x:x*(4/3)),"transposed up a fourth",OUTPUT_PATH)
+        playback_and_save(render_example(trn_data_display_wd,model,"f0_hz",lambda x:x*(0.5)),"transposed down an octave",OUTPUT_PATH)
+        playback_and_save(render_example(trn_data_display_wd,model,"f0_hz",lambda x:x*(2)),"transposed up a octave",OUTPUT_PATH)
         playback_and_save(render_example(trn_data_display_wd,model,"loudness_db",lambda x:x-12),"loudness down 12 db",OUTPUT_PATH)
         playback_and_save(render_example(trn_data_display_wd,model,"loudness_db",lambda x:x-6),"loudness down 6 db",OUTPUT_PATH)
         playback_and_save(render_example(trn_data_display_wd,model,"loudness_db",lambda x:x+6),"loudness up 6 db",OUTPUT_PATH)
