@@ -6,6 +6,8 @@ In this project we combine techniques from neural voice cloning and musical inst
 
 - [Blogpost with audio examples](https://erlj.notion.site/Neural-Instrument-Cloning-from-very-few-samples-2cf41d8b630842ee8c7eb55036a1bfd6).
 
+- [Preprint of paper (under review at DAFX 2022)](https://erl-j.github.io/neural-music-instrument-cloning-web-supplement/Neural_Instrument_Cloning_PREPRINT.pdf)
+
 Preprint coming soon.
 
 Note that this is very much research code 🗑
